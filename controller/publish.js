@@ -6,6 +6,7 @@ const publishModel = require('../models/publish');
 const tools = require('../common/tools');
 const _ = require('lodash');
 const config=require('../config');
+const Promise=require('bluebird');
 const baseController = require('./base_controller')
 
 const projectCategory = {
@@ -15,7 +16,7 @@ const projectCategory = {
         let dir = tools.getParam(req,'dir');
         let domain = tools.getParam(req,'domain');
         let generate = tools.getParam(req,'generate');
-        if (tools.notEmpty([name])) {
+        if (tools.notEmpty([publishName])) {
             return tools.sendResult(res,-1);
         }
         publishModel.create({
@@ -23,6 +24,8 @@ const projectCategory = {
             ip:ip,
             dir:dir,
             domain:domain,
+            createBy:req.session.user._id,
+            updateBy:req.session.user._id,
             generate:generate
         }).then(record =>{
             tools.sendResult(res,0);
@@ -33,12 +36,11 @@ const projectCategory = {
     },
 
     edit : function(req, res, next){
-        // let operateName = tools.getParam(req,'key');
         let publishName = tools.getParam(req,'publishName');
-        // let ip = tools.getParam(req,'ip');
-        // let dir = tools.getParam(req,'dir');
-        // let domain = tools.getParam(req,'domain');
-        // let generate = tools.getParam(req,'generate');
+        let ip = tools.getParam(req,'ip');
+        let dir = tools.getParam(req,'dir');
+        let domain = tools.getParam(req,'domain');
+        let generate = tools.getParam(req,'generate');
         let id = tools.getParam(req,'id');
 
         if (tools.notEmpty([publishName])) {
@@ -46,10 +48,10 @@ const projectCategory = {
         }
         let _record = {
             publishName:publishName,
-            // ip:ip,
-            // dir:dir,
-            // domain:domain,
-            // generate:generate
+            ip:ip,
+            dir:dir,
+            domain:domain,
+            generate:generate,
             _id:id
         }
         publishModel.getById(_record._id).then( reData => {
@@ -75,11 +77,15 @@ const projectCategory = {
     },
 
     list : function(req, res){
-        publishModel.find({},'_id publishName ').then(reData =>{
-            // if(_.isEmpty(reData)){
-            //     return tools.sendResult(res,1000);
-            // }
 
+        Promise.props({
+            reData:publishModel.find({},'_id ip createAt updateAt publishName domain generate dir createBy updateBy  ')
+            .populate('createBy','username')
+            .populate('updateBy','username'),
+        }).then(reData => {
+            if(!reData){
+                return tools.sendResult(res,1000);
+            }
             tools.sendResult(res,0,reData);
         }).catch(err =>{
             return tools.sendResult(res,600);

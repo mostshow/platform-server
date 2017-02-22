@@ -50,7 +50,6 @@ const Role = {
             let modifyRole = _.extend(reData, _role);
             modifyRole.save((err, reData) => {
                 if (err) {
-                    console.log(err)
                     return tools.sendResult(res,500)
                 }
                 tools.sendResult(res,0)

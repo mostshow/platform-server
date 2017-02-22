@@ -10,7 +10,7 @@ const ProjectSchema = new Schema({
     name: { type: String },
     gitPath: { type: String },
     branch: { type: String },
-    describe: { type: String },
+    description: { type: String },
     dir: { type: String },
     category: { type: ObjectId ,ref: 'projectCategory'},
     publish: [{ type: ObjectId ,ref: 'Publish' }],

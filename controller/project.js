@@ -19,6 +19,7 @@ const project = {
         let name = tools.getParam(req,'name');
         let branch = tools.getParam(req,'branch');
         let gitPath = tools.getParam(req,'gitPath');
+        let description = tools.getParam(req,'description');
         let category = tools.getParam(req,'category');
         // let home = tools.getParam(req,'home');
         // let domain = tools.getParam(req,'domain');
@@ -39,6 +40,7 @@ const project = {
             dir : dir,
             branch : branch,
             gitPath : gitPath,
+            description : description,
             category : category,
             commit : commit
         }
@@ -70,6 +72,7 @@ const project = {
                 dir:params.dir,
                 gitPath:params.gitPath,
                 branch:params.branch,
+                description:params.description,
                 category:params.category,
                 createBy:req.session.user._id,
                 updateBy:req.session.user._id
@@ -91,18 +94,17 @@ const project = {
         let domain = tools.getParam(req,'domain');
         let category = tools.getParam(req,'category');
         let status = tools.getParam(req,'status');
+        let description = tools.getParam(req,'description');
         let id = tools.getParam(req,'id');
         if (tools.notEmpty([name, id ,dir])) {
             return tools.sendResult(res,-1);
         }
         let _record = {
             name:name,
-            // dir:dir,
-            // gitPath:gitPath,
-            home:home,
-            domain:domain,
+            dir:dir,
+            gitPath:gitPath,
             category:category,
-            status:status,
+            description:description,
             updateBy :req.session.user._id,
             _id:id
         }
@@ -131,16 +133,34 @@ const project = {
     del : function(req, res, next) {
         baseController.del.apply(ProjectModel,arguments)
     },
+    get : function(req, res, next){
+        let id = tools.getParam(req,'id');
+        if (tools.notEmpty([id])) {
+            return tools.sendResult(res,-1);
+        }
 
+        ProjectModel.findOne({_id: id})
+        .populate('publish','publishName')
+        .populate('category','name')
+        .then( reData => {
+            if(_.isEmpty(reData)){
+                return tools.sendResult(res,1000);
+            }
+            tools.sendResult(res,0,reData)
+        }).catch(err => {
+            //return next(err);
+            return tools.sendResult(res,600);
+        });
+    },
     list : function(req, res,next){
 
         let dataFrom = tools.getParam(req,'dataFrom')||config.defaultDataFrom;
         let dataCount = tools.getParam(req,'dataCount')||config.defaultDataCount;
         let options = {skip: Number(dataFrom), limit: Number(dataCount), sort: {createAt: -1}};
         Promise.props({
-            reData:ProjectModel.find({},'_id name dir  gitPath category branch createBy updateBy createAt updateAt',options)
-            .populate('status','name className')
+            reData:ProjectModel.find({},'_id name dir  gitPath category branch publish description createBy updateBy createAt updateAt',options)
             .populate('category','name')
+            // .populate('publish','publishName')
             .populate('createBy','username')
             .populate('updateBy','username'),
             totalRecord:ProjectModel.count({})
@@ -169,7 +189,19 @@ const project = {
             if(_.isEmpty(projectReData)){
                 return tools.sendResult(res,1000);
             }
+
+            projectReData.publish = remove(projectReData.publish,publish_id)
+            projectReData.publish.push(publish_id)
+            let modify = _.extend(projectReData, {});
+            modify.save((err, projectReData) => {
+                if (err) {
+                    return tools.sendResult(res,500)
+                }
+                tools.sendResult(res,0)
+            })
+            return;
             console.log('switch')
+
             ProjectOp.switch({dir:projectReData.dir,branch:projectReData.branch},function(err){
                 if(err){
                     return tools.sendResult(res,500);

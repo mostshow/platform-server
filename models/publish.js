@@ -10,7 +10,9 @@ const publishSchema = new Schema({
     ip: { type: String },
     dir: { type: String },
     domain: { type: String },
-    generate: { type: Boolean },
+    generate: { type: Number },
+    createBy: { type: ObjectId ,ref: 'User' },
+    updateBy: { type: ObjectId ,ref: 'User' },
     updateAt: {type:Date,default:Date.now},
     createAt: { type: Date, default: Date.now }
 

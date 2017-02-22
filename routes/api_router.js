@@ -117,6 +117,7 @@ router.use('/project/edit',CertMiddleWare.userRequired,projectController.edit);
 router.use('/project/del',CertMiddleWare.userRequired,projectController.del);
 router.use('/project/online',CertMiddleWare.userRequired,projectController.online);
 router.use('/project/offline',CertMiddleWare.userRequired,projectController.offline);
+router.use('/project/get',CertMiddleWare.userRequired,projectController.get);
 
 
 

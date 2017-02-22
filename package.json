@@ -10,7 +10,7 @@
     "start": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Lyndon",
+  "author": "lyndon",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.0",

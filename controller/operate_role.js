@@ -90,7 +90,6 @@ const OperateRole = {
         if (tools.notEmpty([id ])) {
             return tools.sendResult(res,-1);
         }
-        console.log(id)
         OperateRoleModel.findOne({'_id':id},'_id operateName route roleId createAt updateAt').populate('roleId' , 'rolename roleId').
             then(reData =>{
             tools.sendResult(res,0,reData);
