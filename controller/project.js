@@ -5,7 +5,9 @@ const PublishModel= require('../models/publish');
 const tools = require('../common/tools');
 const Client= require('../common/conn_client');
 const ProjectOp = require('../common/project_operate');
+const fs = require('fs');
 const _ = require('lodash');
+const moment = require('moment');
 const Promise=require('bluebird');
 const config=require('../config');
 const uuidV4 = require('uuid/v4');
@@ -21,6 +23,7 @@ const project = {
         let gitPath = tools.getParam(req,'gitPath');
         let description = tools.getParam(req,'description');
         let category = tools.getParam(req,'category');
+        let accessDir = tools.getParam(req,'accessDir') || uuidV4().split('-')[0];
         // let home = tools.getParam(req,'home');
         // let domain = tools.getParam(req,'domain');
         // let status = tools.getParam(req,'status');
@@ -42,6 +45,7 @@ const project = {
             gitPath : gitPath,
             description : description,
             category : category,
+            accessDir:accessDir,
             commit : commit
         }
         ProjectModel.find({gitPath:params.gitPath}).then((reData)=>{
@@ -74,6 +78,7 @@ const project = {
                 branch:params.branch,
                 description:params.description,
                 category:params.category,
+                accessDir:params.accessDir,
                 createBy:req.session.user._id,
                 updateBy:req.session.user._id
             }).then(record =>{
@@ -158,7 +163,7 @@ const project = {
         let dataCount = tools.getParam(req,'dataCount')||config.defaultDataCount;
         let options = {skip: Number(dataFrom), limit: Number(dataCount), sort: {createAt: -1}};
         Promise.props({
-            reData:ProjectModel.find({},'_id name dir  gitPath category branch publish description createBy updateBy createAt updateAt',options)
+            reData:ProjectModel.find({})
             .populate('category','name')
             // .populate('publish','publishName')
             .populate('createBy','username')
@@ -180,34 +185,43 @@ const project = {
         //     _id : tools.getParam(req,'id'),
         //     status : tools.getParam(req,'status'),
         // }
-        let  project_id='588096dabc094110e0ab5852';//project
-        let  publish_id='588172626b3aab2813d73840';//publish
-        // if (tools.notEmpty([id,status,publishName])) {
-        //     return tools.sendResult(res,-1);
-        // }
+        let  project_id = tools.getParam(req,'project_id')//project
+        let  publish_id = tools.getParam(req,'publish_id');//publish
+        if (tools.notEmpty([project_id,publish_id])) {
+            return tools.sendResult(res,-1);
+        }
         ProjectModel.getById(project_id).then( projectReData => {
             if(_.isEmpty(projectReData)){
                 return tools.sendResult(res,1000);
             }
 
-            projectReData.publish = remove(projectReData.publish,publish_id)
-            projectReData.publish.push(publish_id)
-            let modify = _.extend(projectReData, {});
-            modify.save((err, projectReData) => {
-                if (err) {
-                    return tools.sendResult(res,500)
-                }
-                tools.sendResult(res,0)
-            })
-            return;
+//test
+            // projectReData.publish = remove(projectReData.publish,publish_id)
+            // projectReData.publish.push(publish_id)
+            // let modify = _.extend(projectReData, {});
+            // modify.save((err, projectReData) => {
+            //     if (err) {
+            //         return tools.sendResult(res,500)
+            //     }
+            //     tools.sendResult(res,0)
+            // })
+            // return;
+
+//test
+
+
             console.log('switch')
 
             ProjectOp.switch({dir:projectReData.dir,branch:projectReData.branch},function(err){
                 if(err){
+                    console.log(err)
                     return tools.sendResult(res,500);
                 }
-                let release =publish_id.slice(0,10)+project_id.slice(0,10);
-                exec('cd '+local(projectReData.dir)+' &&rm -rf '+release+'&& fis3 release -d '+local(release), (error, stdout, stderr) => {
+                let release =projectReData.accessDir;
+                let data = fs.readFileSync(local(projectReData.dir)+'/fis-conf.js')
+                let newData = data.toString().replace('$domain$',release);
+                fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',newData)
+                exec('cd '+local(projectReData.dir)+' &&rm -rf ../'+release+'&& fis3 release -d '+local(release), (error, stdout, stderr) => {
                     if (error) {
                         console.error(`exec error: ${error}`);
                         return tools.sendResult(res,500);
@@ -240,23 +254,40 @@ const project = {
                             },function(err,data){
                                 if(err){
                                     console.log(err)
+                                    return tools.sendResult(res,500)
                                 }
-                                console.log('cd '+reData.dir+' && drf '+release+' ' +release+'-pack.zip'+ "\r\nexit\r\n")
+                                let version = getVersion();
                                 Client.Shell({
                                     connConfig:connConfig,
-                                    cmd:'cd '+reData.dir+' && drf '+release+' ' +release+'-pack.zip'+ "\r\nexit\r\n"
+                                    cmd:'cd '+reData.dir+' && drf '+release+' ' +release+'-pack.zip  --bak-name='+version+  "\r\nexit\r\n"
                                 },function(err,data){
                                     if(err) return tools.sendResult(res,501);
                                     console.log(data)
                                     console.log('http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html')
                                     projectReData.publish = remove(projectReData.publish,publish_id)
                                     projectReData.publish.push(publish_id)
+
+                                    let backData = projectReData.backupInfo || {}
+                                    let backup = (backData[publish_id]&&projectReData.backupInfo[publish_id].backup)||[];
+                                    backup.unshift(release+'-bak-'+version);
+                                    let deleteBak = backup.splice(5);
+                                    let backupInfo = {
+                                        backup:backup,
+                                        deleteBak:deleteBak
+                                    }
+                                        backData[publish_id] = backupInfo;
+
                                     let modify = _.extend(projectReData, {});
+                                    modify.markModified('backupInfo')
                                     modify.save((err, projectReData) => {
                                         if (err) {
                                             return tools.sendResult(res,500)
                                         }
-                                        tools.sendResult(res,0)
+                                        let data = fs.readFileSync(local(projectReData.dir)+'/fis-conf.js')
+                                        let newData = data.toString().replace(release,'$domain$');
+                                        fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',newData)
+                                        return tools.sendResult(res,0)
+
                                     })
                                 })
                             })
@@ -280,20 +311,33 @@ const project = {
 
     },
     offline : function(req,res){
-        // let _record = {
-        //     _id : tools.getParam(req,'id'),
-        //     status : tools.getParam(req,'status')
-        // }
-        // if (tools.notEmpty([id,status])) {
-        //     return tools.sendResult(res,-1);
-        // }
-        let  project_id='588096dabc094110e0ab5852';//project
-        let  publish_id='588172626b3aab2813d73840';//publish
+
+        let  project_id = tools.getParam(req,'project_id')//project
+        let  publish_id = tools.getParam(req,'publish_id');//publish
+        if (tools.notEmpty([project_id,publish_id])) {
+            return tools.sendResult(res,-1);
+        }
         ProjectModel.getById(project_id).then( projectReData => {
             if(_.isEmpty(projectReData)){
                 return tools.sendResult(res,1000);
             }
-            let release =publish_id.slice(0,10)+project_id.slice(0,10);
+//test
+            // projectReData.publish = remove(projectReData.publish,publish_id)
+            // console.log(projectReData.publish.indexOf(publish_id))
+            // let modify = _.extend(projectReData, {});
+            // modify.save((err, projectReData) => {
+            //     if (err) {
+            //         return tools.sendResult(res,500)
+            //     }
+            //     tools.sendResult(res,0)
+            // })
+            // return;
+//test
+
+
+
+
+            let release =projectReData.accessDir;
 
             PublishModel.getById(publish_id).then((reData)=>{
                 if(_.isEmpty(reData)){
@@ -335,8 +379,30 @@ const project = {
             //return next(err);
             return tools.sendResult(res,600);
         });
+    },
+    revert:function(req,res){
+        let  dirName = tools.getParam(req,'dirName')
+        let  revert = tools.getParam(req,'revert')
+        if (tools.notEmpty([dirName])) {
+            return tools.sendResult(res,-1);
+        }
+
+
+
     }
 }
+function getVersion(){
+    const curTime = moment();
+    const timeArr = [];
+    timeArr.push(curTime.get('year'));
+    timeArr.push(curTime.get('month')+1);
+    timeArr.push(curTime.get('date'));
+    timeArr.push(curTime.get('hour'));
+    timeArr.push(curTime.get('minute'));
+    timeArr.push(curTime.get('second'));
+    return timeArr.join('-');
+}
+
 function remove(arr,ele){
     let newArr = []
     arr.forEach((item,index) => {
