@@ -76,22 +76,22 @@ router.use('/varconfig/view',CertMiddleWare.adminRequired,varConfigController.vi
  *
  */
 
-router.use('/picture/create',CertMiddleWare.userRequired,pictureController.create)
-router.use('/picture/list',pictureController.list)
-router.use('/picture/edit',CertMiddleWare.userRequired,pictureController.edit)
-router.use('/picture/del',CertMiddleWare.userRequired,pictureController.del)
-router.use('/picture/view',pictureController.view)
+router.use('/image/create',CertMiddleWare.userRequired,pictureController.create)
+router.use('/image/list',pictureController.list)
+router.use('/image/edit',CertMiddleWare.userRequired,pictureController.edit)
+router.use('/image/del',CertMiddleWare.userRequired,pictureController.del)
+router.use('/image/view',pictureController.view)
 
 /**
  * pic_category
  *
  */
 
-router.use('/piccategory/create',CertMiddleWare.userRequired,piccategoryController.create)
-router.use('/piccategory/list',piccategoryController.list)
-router.use('/piccategory/edit',CertMiddleWare.userRequired,piccategoryController.edit)
-router.use('/piccategory/del',CertMiddleWare.userRequired,piccategoryController.del)
-router.use('/piccategory/view',piccategoryController.view)
+router.use('/imgCategory/create',CertMiddleWare.userRequired,piccategoryController.create)
+router.use('/imgCategory/list',piccategoryController.list)
+router.use('/imgCategory/edit',CertMiddleWare.userRequired,piccategoryController.edit)
+router.use('/imgCategory/del',CertMiddleWare.userRequired,piccategoryController.del)
+router.use('/imgCategory/view',piccategoryController.view)
 
 
 
@@ -117,6 +117,7 @@ router.use('/project/edit',CertMiddleWare.userRequired,projectController.edit);
 router.use('/project/del',CertMiddleWare.userRequired,projectController.del);
 router.use('/project/online',CertMiddleWare.userRequired,projectController.online);
 router.use('/project/offline',CertMiddleWare.userRequired,projectController.offline);
+router.use('/project/revert',CertMiddleWare.userRequired,projectController.revert);
 router.use('/project/get',CertMiddleWare.userRequired,projectController.get);
 
 

@@ -13,10 +13,25 @@ function MongooseKeeper() {
 
 MongooseKeeper.prototype.config = function(conf) {
 
-    let connStr;
     mongoose.Promise = Promise;
+    let opts = {
+        db: {
+            native_parser: true
+        },
+        server: {
+            poolSize: 5,
+            auto_reconnect: true
+        },
+        user: conf.userid,
+        pass: conf.password
+    };
+    let connStr;
+
     if (process.env.MONGO_DB_STR) {
         connStr = process.env.MONGO_DB_STR;
+    } else {
+        //'mongodb://user:pass@localhost:port/database'
+        connStr = util.format('mongodb://%s:%s@%s:%d/%s', conf.userid, conf.password, conf.host, conf.port, conf.database);
     }
     mongoose.connect(connStr, function(err) {
         if (err) {
@@ -40,8 +55,21 @@ MongooseKeeper.prototype.config = function(conf) {
         // dbcon.open(host, dbName, port, opts, function() {
         // console.log('closed-opening');
         // });
+        reConnect('*');
     });
 
+    function reConnect(msg) {
+        console.log('reConnect' + msg);
+        if (this.recon) {
+            console.log('reConnect-**');
+            dbcon.open(conf.host, conf.database, conf.port, opts, function() {
+                console.log('closed-opening');
+            });
+            this.recon = false;
+            console.log('reConnect-***');
+        }
+        console.log('reConnect-end');
+    }
 };
 
 exports = module.exports = new MongooseKeeper();

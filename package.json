@@ -17,6 +17,7 @@
     "bluebird": "^3.4.7",
     "body-parser": "^1.15.0",
     "connect-mongo": "^1.1.0",
+    "connect-redis": "^3.2.0",
     "cookie-parser": "^1.4.1",
     "express": "^4.13.4",
     "express-session": "^1.13.0",
@@ -27,6 +28,7 @@
     "moment": "^2.17.1",
     "mongoose": "^4.7.4",
     "nodegit": "^0.16.0",
+    "redis": "^2.6.5",
     "ssh2": "^0.5.4",
     "utility": "^1.9.0",
     "validator": "^6.2.0"

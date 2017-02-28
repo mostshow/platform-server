@@ -147,6 +147,7 @@ const project = {
         ProjectModel.findOne({_id: id})
         .populate('publish','publishName')
         .populate('category','name')
+        .populate('updateBy','username')
         .then( reData => {
             if(_.isEmpty(reData)){
                 return tools.sendResult(res,1000);
@@ -273,9 +274,10 @@ const project = {
                                     let deleteBak = backup.splice(5);
                                     let backupInfo = {
                                         backup:backup,
-                                        deleteBak:deleteBak
+                                        deleteBak:deleteBak,
+                                        revertVersion:''
                                     }
-                                        backData[publish_id] = backupInfo;
+                                    backData[publish_id] = backupInfo;
 
                                     let modify = _.extend(projectReData, {});
                                     modify.markModified('backupInfo')
@@ -286,7 +288,7 @@ const project = {
                                         let data = fs.readFileSync(local(projectReData.dir)+'/fis-conf.js')
                                         let newData = data.toString().replace(release,'$domain$');
                                         fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',newData)
-                                        return tools.sendResult(res,0)
+                                        return tools.sendResult(res,0,projectReData)
 
                                     })
                                 })
@@ -362,12 +364,22 @@ const project = {
                     console.log(projectReData.publish)
                     projectReData.publish = remove(projectReData.publish,publish_id)
                     console.log(projectReData.publish.indexOf(publish_id))
+                    let backData = projectReData.backupInfo || {}
+                    let backup = (backData[publish_id]&&projectReData.backupInfo[publish_id].backup)||[];
+                    let deleteBak = backup.splice(5);
+                    let backupInfo = {
+                        backup:backup,
+                        deleteBak:deleteBak,
+                        revertVersion:''
+                    }
+                    backData[publish_id] = backupInfo;
                     let modify = _.extend(projectReData, {});
+                    modify.markModified('backupInfo')
                     modify.save((err, projectReData) => {
                         if (err) {
                             return tools.sendResult(res,500)
                         }
-                        tools.sendResult(res,0)
+                        tools.sendResult(res,0,projectReData)
                     })
                 })
             }).catch(err => {
@@ -381,12 +393,69 @@ const project = {
         });
     },
     revert:function(req,res){
-        let  dirName = tools.getParam(req,'dirName')
-        let  revert = tools.getParam(req,'revert')
-        if (tools.notEmpty([dirName])) {
+        let  revertVersion = tools.getParam(req,'revertVersion')
+        let  project_id = tools.getParam(req,'project_id')//project
+        let  publish_id = tools.getParam(req,'publish_id');//publish
+        if (tools.notEmpty([revertVersion, project_id, publish_id])) {
             return tools.sendResult(res,-1);
         }
+        ProjectModel.getById(project_id).then( projectReData => {
+            if(_.isEmpty(projectReData)){
+                return tools.sendResult(res,1000);
+            }
+                let release =projectReData.accessDir;
+                        PublishModel.getById(publish_id).then((reData)=>{
+                            if(_.isEmpty(reData)){
+                                return tools.sendResult(res,1000);
+                            }
+                            let conn_ip = reData.ip;
+                            // let sftp = _.keyBy(config.connConfig.sftp, 'host');
+                            let sftp = _.keyBy(config.connConfig.ssh, 'host');
+                            let connConfig = {
+                                host: sftp[conn_ip]['host'],
+                                port: 22,
+                                username: sftp[conn_ip]['name'],
+                                password: sftp[conn_ip]['pass'],
+                            }
+                                Client.Shell({
+                                    connConfig:connConfig,
+                                    cmd:'cd '+reData.dir+' && cp ./backup/'+revertVersion+' '+revertVersion+'&&drf '+release+' ' +revertVersion+'  --unpack  \r\nexit\r\n'
+                                },function(err,data){
+                                    if(err) return tools.sendResult(res,501);
 
+                                    console.log(data)
+                                    console.log('http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html')
+
+                                    projectReData.publish = remove(projectReData.publish,publish_id)
+                                    projectReData.publish.push(publish_id)
+                                    // let backData = projectReData.backupInfo
+                                    // let backup = (backData[publish_id]&&projectReData.backupInfo[publish_id].backup)||[];
+                                    // let deleteBak = backup.splice(5);
+                                    // let backupInfo = {
+                                    //     backup:backup,
+                                    //     deleteBak:deleteBak,
+                                    //     currentVersion:revertVersion
+                                    // }
+                                    projectReData.backupInfo[publish_id].revertVersion = revertVersion;
+
+                                    let modify = _.extend(projectReData, {});
+                                    modify.markModified('backupInfo')
+                                    modify.save((err, projectReData) => {
+                                        if (err) {
+                                            return tools.sendResult(res,500)
+                                        }
+                                        return tools.sendResult(res,0,projectReData)
+
+                                    })
+                                })
+                        }).catch(err => {
+                            console.log(err);
+                            return tools.sendResult(res,600);
+                        });
+        }).catch(err => {
+            //return next(err);
+            return tools.sendResult(res,600);
+        });
 
 
     }

@@ -45,8 +45,26 @@ if (process.env.NODE_ENV=='development') {
         })
     }));
 
+} else {
+    //redis保存session
+    const redis = require('redis');
+    const RedisStore = require('connect-redis')(session);
+    const client = redis.createClient(config.redis_port, config.redis_port,config.redis_opt);
+    client.on("error", function(err) {
+        console.log("redis client Error " + err);
+    });
+    client.auth(config.redis_auth);
+    app.use(session({
+        secret: config.session_secret,
+        key: config.auth_cookie_name,
+        store: new RedisStore({
+            client: client
+        }),
+        resave: true,
+        saveUninitialized: false
+    }));
 }
-mongokeeper.config();
+mongokeeper.config(config.dbConfig);
 
 app.use(CertMiddleWare.setHeader);
 app.use(CertMiddleWare.authUser);

@@ -24,7 +24,13 @@ const ProjectSchema = new Schema({
     createAt: { type: Date, default: Date.now },
     updateAt: { type: Date, default: Date.now }
 });
-
+// backupInfo:{
+//     publish_id:{
+//         backup:[]
+//         deleteBak:[]
+//         revertVersion:''
+//     }
+// }
 
 ProjectSchema.pre('save', function(next) {
   if (this.isNew) {
