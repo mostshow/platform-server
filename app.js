@@ -10,9 +10,7 @@ const webRouter=require('./routes/web_router');
 const apiRouter=require('./routes/api_router');
 const config=require('./config');
 const CertMiddleWare = require('./common/cert');
-
 const app=express();
-
 // app.set('views',path.join(__dirname,'../view'));
 
 // app.set('view engine','html');

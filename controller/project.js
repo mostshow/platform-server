@@ -285,9 +285,19 @@ const project = {
                                         if (err) {
                                             return tools.sendResult(res,500)
                                         }
+
                                         let data = fs.readFileSync(local(projectReData.dir)+'/fis-conf.js')
                                         let newData = data.toString().replace(release,'$domain$');
                                         fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',newData)
+                                        let obj = {
+                                            username:req.session.user.username,
+                                            action:'上线',
+                                            project:modify.name,
+                                            server:reData.publishName,
+                                            address:'http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html'
+                                        }
+                                        tools.sendProjectMail(obj)
+                                        tools.logger(obj)
                                         return tools.sendResult(res,0,projectReData)
 
                                     })
@@ -335,10 +345,6 @@ const project = {
             // })
             // return;
 //test
-
-
-
-
             let release =projectReData.accessDir;
 
             PublishModel.getById(publish_id).then((reData)=>{
@@ -379,7 +385,16 @@ const project = {
                         if (err) {
                             return tools.sendResult(res,500)
                         }
-                        tools.sendResult(res,0,projectReData)
+
+                        let obj = {
+                            username:req.session.user.username,
+                            action:'下线',
+                            project:modify.name,
+                            server:reData.publishName,
+                            address:'http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html'
+                        }
+                        tools.logger(obj)
+                        tools.sendProjectMail(obj)
                     })
                 })
             }).catch(err => {
@@ -444,6 +459,16 @@ const project = {
                                         if (err) {
                                             return tools.sendResult(res,500)
                                         }
+                                        let obj = {
+                                            username:req.session.user.username,
+                                            action:'回滚',
+                                            project:modify.name,
+                                            version:revertVersion,
+                                            server:reData.publishName,
+                                            address:'http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html'
+                                        }
+                                        tools.logger(obj)
+                                        tools.sendProjectMail(obj)
                                         return tools.sendResult(res,0,projectReData)
 
                                     })

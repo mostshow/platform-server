@@ -28,6 +28,8 @@
     "moment": "^2.17.1",
     "mongoose": "^4.7.4",
     "nodegit": "^0.16.0",
+    "nodemailer": "^3.1.4",
+    "nodemailer-smtp-transport": "^2.7.2",
     "redis": "^2.6.5",
     "ssh2": "^0.5.4",
     "utility": "^1.9.0",
