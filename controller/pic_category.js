@@ -5,6 +5,7 @@
 const picCategoryModel = require('../models/pic_category');
 const pictureModel = require('../models/picture');
 const tools = require('../common/tools');
+const Promise=require('bluebird');
 const _ = require('lodash');
 const config=require('../config');
 const baseController = require('./base_controller')
@@ -64,7 +65,12 @@ const picCategory = {
     },
 
     list : function(req, res){
-        picCategoryModel.find({},'_id name pid').then(reData =>{
+
+        Promise.props({
+            reData:picCategoryModel.find({},'_id name createBy updateBy')
+            .populate('createBy','username')
+            .populate('updateBy','username'),
+        }).then(reData => {
             if(!reData){
                 return tools.sendResult(res,1000);
             }
