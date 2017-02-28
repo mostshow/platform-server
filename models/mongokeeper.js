@@ -4,6 +4,7 @@
 'use strict'
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
+const util = require("util");
 
 function MongooseKeeper() {
     this.db = mongoose.createConnection();
