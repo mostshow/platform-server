@@ -28,7 +28,6 @@ const project = {
         // let domain = tools.getParam(req,'domain');
         // let status = tools.getParam(req,'status');
         // let     dir = uuidV4()+'';
-        // describe
         // let     name= '活动页面';
         // let     gitPath= 'git@10.16.15.113:web-dev/activity.git';
         // let     branch= 'test-project';
@@ -91,10 +90,9 @@ const project = {
     },
 
     edit : function(req, res, next){
-        // let operateName = tools.getParam(req,'key');
         let name = tools.getParam(req,'name');
-        // let dir = tools.getParam(req,'dir');
-        // let gitPath = tools.getParam(req,'gitPath');
+        let dir = tools.getParam(req,'dir');
+        let gitPath = tools.getParam(req,'gitPath');
         let home = tools.getParam(req,'home');
         let domain = tools.getParam(req,'domain');
         let category = tools.getParam(req,'category');
@@ -186,6 +184,7 @@ const project = {
         //     _id : tools.getParam(req,'id'),
         //     status : tools.getParam(req,'status'),
         // }
+        let onlineLog = ''
         let  project_id = tools.getParam(req,'project_id')//project
         let  publish_id = tools.getParam(req,'publish_id');//publish
         if (tools.notEmpty([project_id,publish_id])) {
@@ -227,13 +226,14 @@ const project = {
                         console.error(`exec error: ${error}`);
                         return tools.sendResult(res,500);
                     }
+                    onlineLog += stdout;
                     exec('cd '+local()+' && drf '+ release +' --pack',(error, stdout, stderr) => {
                         if (error) {
                             console.error(`exec error: ${error}`);
                             return tools.sendResult(res,500);
                         }
                         console.log(`stdout: ${stdout}`);
-
+                        onlineLog += stdout;
                         PublishModel.getById(publish_id).then((reData)=>{
                             if(_.isEmpty(reData)){
                                 return tools.sendResult(res,1000);
@@ -257,6 +257,8 @@ const project = {
                                     console.log(err)
                                     return tools.sendResult(res,500)
                                 }
+
+                                onlineLog += data;
                                 let version = getVersion();
                                 Client.Shell({
                                     connConfig:connConfig,
@@ -264,6 +266,7 @@ const project = {
                                 },function(err,data){
                                     if(err) return tools.sendResult(res,501);
                                     console.log(data)
+                                    onlineLog += data;
                                     console.log('http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html')
                                     projectReData.publish = remove(projectReData.publish,publish_id)
                                     projectReData.publish.push(publish_id)
@@ -294,7 +297,8 @@ const project = {
                                             action:'上线',
                                             project:modify.name,
                                             server:reData.publishName,
-                                            address:'http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html'
+                                            address:'http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html',
+                                            onlineLog:onlineLog
                                         }
                                         tools.sendProjectMail(obj)
                                         tools.logger(obj)
@@ -303,16 +307,11 @@ const project = {
                                     })
                                 })
                             })
-
                         }).catch(err => {
                             console.log(err);
                             return tools.sendResult(res,600);
                         });
-
-
-
                         // tools.sendResult(res,0)
-
                     })
                 });
             })

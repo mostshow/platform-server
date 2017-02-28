@@ -99,6 +99,7 @@ const tools = {
             '<p> 访问地址：{{address}} </p>',
             '<p> 版本：{{version}} </p>',
             '<p> 操作人：{{username}} </p>',
+            '<p> 日志：{{onlineLog}}</p>'
         ].join(' ').replace(/{{(.*?)}}/g,function(item,$1){
             return opt[$1]||'N/A'
         })
