@@ -24,32 +24,35 @@ upload.configure({
 });
 const picture = {
     create : function(req, res, next){
-    //生成multiparty对象，并配置上传目标路径
-    var form = new multiparty.Form();
+        //生成multiparty对象，并配置上传目标路径
+        var form = new multiparty.Form();
+        // form.encoding = 'utf-8';
+        // form.uploadDir = "./uploads/images/";
+        // form.maxFilesSize = 2 * 1024 * 1024;
+        form.parse(req, function(err, fields, files) {
+            // console.log(fields)
+            var filesTmp = JSON.stringify(files,null,2);
 
-    form.parse(req, function(err, fields, files) {
-        // console.log(fields)
-      var filesTmp = JSON.stringify(files,null,2);
+            if(err){
+                console.log('parse error: ' + err);
+            } else {
+                console.log('parse files: ' + filesTmp);
+                var inputFile = files.file[0];
+                var uploadedPath = inputFile.path;
+                var dstPath = './' + inputFile.originalFilename;
+                // fs.renameSync(files.path,files.originalFilename);
+                fs.rename(uploadedPath, dstPath, function(err) {
+                    if(err){
+                        console.log('rename error: ' + err);
+                    } else {
+                        console.log('rename ok');
+                    }
+                });
+            }
+        })
 
-      if(err){
-        console.log('parse error: ' + err);
-      } else {
-        console.log('parse files: ' + filesTmp);
-        var inputFile = files.file[0];
-        var uploadedPath = inputFile.path;
-        var dstPath = './' + inputFile.originalFilename;
-
-        //重命名为真实文件名
-        fs.rename(uploadedPath, dstPath, function(err) {
-          if(err){
-            console.log('rename error: ' + err);
-          } else {
-            console.log('rename ok');
-          }
-        });
-      }
-    })
-    //上传完成后处理
+        return;
+        //上传完成后处理
         // upload.fileHandler()(req, res, next)
         // req.filemanager = upload.fileManager();
         // upload.fileManager().getFiles(function (files) {
@@ -92,7 +95,7 @@ const picture = {
         }).then(record =>{
             tools.sendResult(res,0);
         }).catch(err => {
-                // return next(err);
+            // return next(err);
             return tools.sendResult(res,600);
         })
     },
@@ -185,11 +188,11 @@ const picture = {
         }
         pictureModel.findOne({'_id':id},'_id name url  category thumbnail createAt updateAt').populate('category','name').
             then(reData =>{
-            if(!reData){
-                return tools.sendResult(res,1000);
-            }
-            tools.sendResult(res,0,reData);
-        })
+                if(!reData){
+                    return tools.sendResult(res,1000);
+                }
+                tools.sendResult(res,0,reData);
+            })
     }
 }
 
