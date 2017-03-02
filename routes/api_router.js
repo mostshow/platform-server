@@ -76,11 +76,12 @@ router.use('/varconfig/view',CertMiddleWare.adminRequired,varConfigController.vi
  *
  */
 
-router.use('/image/create',CertMiddleWare.userRequired,pictureController.create)
+router.use('/image/create',pictureController.create)
 router.use('/image/list',pictureController.list)
 router.use('/image/edit',CertMiddleWare.userRequired,pictureController.edit)
 router.use('/image/del',CertMiddleWare.userRequired,pictureController.del)
 router.use('/image/view',pictureController.view)
+router.use('/image/upload',pictureController.upload)
 
 /**
  * pic_category

@@ -91,7 +91,6 @@ const CertMiddleWare = {
      *
      */
     setHeader: function(req, res, next){
-        //代理设置cookie
         //res.setHeader("Content-Type","text/html;charset=utf-8");
         res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3011');
         res.setHeader('Access-Control-Allow-Credentials', true);
