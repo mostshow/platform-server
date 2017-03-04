@@ -6,17 +6,13 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const ObjectId = Schema.Types.ObjectId
 const pictureSchema = new Schema({
-    name: { type: String },
     url:{ type: String },
-    thumbnail:{ type: String },
-    size:{type: Number},
-    type:{type: String},
     category: {type: ObjectId,ref: 'picCategory'},
     updateAt: {type:Date,default:Date.now},
     createAt: { type: Date, default: Date.now }
 
 });
-pictureSchema.index({name : 1 }, { unique: true });
+// pictureSchema.index({url : 1 }, { unique: true });
 pictureSchema.pre('save' , function(next){
     if (this.isNew) {
         this.createAt = Date.now();

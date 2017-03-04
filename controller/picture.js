@@ -2,102 +2,84 @@
 
 'use strict';
 
-const fs = require('fs')
-const pictureModel = require('../models/picture');
-const tools = require('../common/tools');
-const _ = require('lodash');
-const Promise=require('bluebird');
-const config=require('../config');
+const fs = require('fs-extra')
+const multiparty = require('multiparty')
+const OSS = require('ali-oss')
+const co = require('co');
+const uuidV4 = require('uuid/v4')
+const pictureModel = require('../models/picture')
+const tools = require('../common/tools')
+const _ = require('lodash')
+const Promise=require('bluebird')
+const util = require('util')
+const moment = require('moment')
+const config=require('../config')
 const baseController = require('./base_controller')
-const upload = require('jquery-file-upload-middleware')
-const multiparty = require('multiparty');
+const client = new OSS(config.ossConfig)
 
-upload.configure({
-    uploadDir: __dirname + '/public/uploads',
-    uploadUrl: '/api/image/create',
-    imageVersions: {
-        thumbnail: {
-            width: 80,
-            height: 80
-        }
-    }
-});
 const picture = {
     create : function(req, res, next){
-        //生成multiparty对象，并配置上传目标路径
         var form = new multiparty.Form();
-        // form.encoding = 'utf-8';
-        // form.uploadDir = "./uploads/images/";
-        // form.maxFilesSize = 2 * 1024 * 1024;
+        form.encoding = 'utf-8';
+        // form.uploadDir = "./image/create";
+        form.maxFilesSize = 10 * 1024 * 1024;
         form.parse(req, function(err, fields, files) {
-            // console.log(fields)
-            var filesTmp = JSON.stringify(files,null,2);
-
+            // let filesTmp = JSON.stringify(files,null,2);
             if(err){
                 console.log('parse error: ' + err);
+                return tools.sendResult(res,-1);
             } else {
-                console.log('parse files: ' + filesTmp);
-                var inputFile = files.file[0];
-                var uploadedPath = inputFile.path;
-                var dstPath = './' + inputFile.originalFilename;
-                // fs.renameSync(files.path,files.originalFilename);
-                fs.rename(uploadedPath, dstPath, function(err) {
-                    if(err){
-                        console.log('rename error: ' + err);
-                    } else {
-                        console.log('rename ok');
-                    }
+                let categoryId = fields['categoryId'][0];
+                if (tools.notEmpty([categoryId])) {
+                    return tools.sendResult(res,-1);
+                }
+                const curTime = moment();
+                let uploadedPath = files.file[0].path;
+                let url =  util.format('%s/%s/%s/%s/%s','qgz',curTime.get('year'),curTime.get('month')+1,curTime.get('date'),uuidV4().split('-')[0]+'.'+uploadedPath.split('.').pop());
+                co(function* () {
+                    let result = yield client.put(url, uploadedPath);
+                    pictureModel.create({
+                        category:categoryId,
+                        url:url
+                    }).then(record =>{
+                        let data = {
+                            url: config.imgDomain+record.url
+                        }
+                        tools.sendResult(res,0,data);
+                    }).catch(err => {
+                        console.log(err)
+                        return tools.sendResult(res,600);
+                    })
+                }).catch(function (err) {
+                    console.log(err);
+                    return tools.sendResult(res,600);
                 });
+                // _.each(files.file,function(item){
+                //     const curTime = moment();
+                //     let inputFile = item;
+                //     let uploadedPath = inputFile.path;
+                //     let dirUrl =  util.format('%s/%s/%s/%s/%s','qgz',curTime.get('year'),curTime.get('year'),curTime.get('month')+1,curTime.get('date'),uuidV4().split('-')[0]+'.'+uploadedPath.split('.').pop());
+                //     co(function* () {
+                //         let result = yield client.put(dirUrl, uploadedPath);
+                //         ++curentNum
+                //         if(curentNum == totalNum ){
+                //             pictureModel.create({
+                //                 category:categoryId,
+                //             }).then(record =>{
+                //                 tools.sendResult(res,0);
+                //             }).catch(err => {
+                //                 return tools.sendResult(res,600);
+                //             })
+                //         }
+                //     }).catch(function (err) {
+                //         console.log(err);
+                //         return tools.sendResult(res,600);
+                //     });
+                // })
+
             }
         })
 
-        return;
-        //上传完成后处理
-        // upload.fileHandler()(req, res, next)
-        // req.filemanager = upload.fileManager();
-        // upload.fileManager().getFiles(function (files) {
-        //     console.log(files)
-        //     res.json(files);
-        // });
-        // upload.fileHandler({
-        //     uploadDir: function () {
-        //         return __dirname + '../public/uploads/'
-        //     },
-        //     uploadUrl: function () {
-        //         return '/create'
-        //     }
-        // })(req, res, next);
-        // upload.on('end', function (fileInfo, req, res) {
-        //     return tools.sendResult(res,0);
-        // });
-        return;
-        let categoryId = tools.getParam(req,'categoryId');
-        let thumbnail = tools.getParam(req,'thumbnail');
-        let url = tools.getParam(req,'url');
-        let name = tools.getParam(req,'name');
-        let type = tools.getParam(req,'type');
-        let size = tools.getParam(req,'size');
-        let file = tools.getParam(req,'file')
-        console.log('-------');
-        console.log(req.IncomingMessage);
-
-        if (tools.notEmpty([categoryId, url ,name])) {
-            return tools.sendResult(res,-1);
-        }
-
-        pictureModel.create({
-            name:name,
-            category:categoryId,
-            thumbnail:thumbnail,
-            url:url,
-            size:size,
-            type:type
-        }).then(record =>{
-            tools.sendResult(res,0);
-        }).catch(err => {
-            // return next(err);
-            return tools.sendResult(res,600);
-        })
     },
     upload : function(req, res, next){
         let posterData = req.files.uploadPoster

@@ -24,14 +24,6 @@ const project = {
         let description = tools.getParam(req,'description');
         let category = tools.getParam(req,'category');
         let accessDir = tools.getParam(req,'accessDir') || uuidV4().split('-')[0];
-        // let home = tools.getParam(req,'home');
-        // let domain = tools.getParam(req,'domain');
-        // let status = tools.getParam(req,'status');
-        // let     dir = uuidV4()+'';
-        // let     name= '活动页面';
-        // let     gitPath= 'git@10.16.15.113:web-dev/activity.git';
-        // let     branch= 'test-project';
-        // let     category='586f30605b502f92e8950968';
         let  commit = ' commit info'
         let  dir = gitPath.split('/').pop().split('.')[0];
         if (tools.notEmpty([name,branch, gitPath,category])) {

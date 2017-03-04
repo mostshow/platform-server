@@ -13,9 +13,11 @@
   "author": "lyndon",
   "license": "ISC",
   "dependencies": {
+    "ali-oss": "^4.8.0",
     "bcryptjs": "^2.4.0",
     "bluebird": "^3.4.7",
     "body-parser": "^1.15.0",
+    "co": "^4.6.0",
     "connect-mongo": "^1.1.0",
     "connect-redis": "^3.2.0",
     "cookie-parser": "^1.4.1",

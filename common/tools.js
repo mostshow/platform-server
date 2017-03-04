@@ -7,6 +7,7 @@ const config = require('../config');
 const Promise=require('bluebird');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
+const path = require('path');
 const util = require("util");
 const env = process.env.NODE_ENV || "development";
 const consolePrint = config.debug ;
@@ -119,6 +120,20 @@ const tools = {
             }
         })
         return temp;
+    },
+    mkdirs : function(dirpath, mode, callback){
+        let ctx =this;
+        fs.exists(dirpath, function(exists) {
+            if(exists) {
+                callback(dirpath);
+            } else {
+                ctx.mkdirs(path.dirname(dirpath), mode, function(){
+                    fs.mkdir(dirpath, mode, callback);
+                });
+            }
+        });
     }
 }
 module.exports = tools;
+
+
