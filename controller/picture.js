@@ -35,15 +35,17 @@ const picture = {
                 }
                 const curTime = moment();
                 let uploadedPath = files.file[0].path;
-                let url =  util.format('%s/%s/%s/%s/%s','qgz',curTime.get('year'),curTime.get('month')+1,curTime.get('date'),uuidV4().split('-')[0]+'.'+uploadedPath.split('.').pop());
+                let url =  util.format('%s/%s/%s/%s/%s','qgz',curTime.get('year'),curTime.get('month')+1,curTime.get('date'),uuidV4().split('-')[0]+'.'+uploadedPath.split('.').pop().toLocaleLowerCase());
                 co(function* () {
                     let result = yield client.put(url, uploadedPath);
+                    console.log(result)
                     pictureModel.create({
                         category:categoryId,
                         url:url
                     }).then(record =>{
                         let data = {
-                            url: config.imgDomain+record.url
+                            url: config.imgDomain+record.url,
+                            key: record._id
                         }
                         tools.sendResult(res,0,data);
                     }).catch(err => {
@@ -149,14 +151,23 @@ const picture = {
 
         let dataFrom = tools.getParam(req,'dataFrom')||config.defaultDataFrom;
         let dataCount = tools.getParam(req,'dataCount')||config.defaultDataCount;
+        let category = tools.getParam(req,'category')
         let options = {skip: Number(dataFrom), limit: Number(dataCount), sort: {createAt: -1}};
+        let params = {}
+        if(category != 0){
+            Object.assign(params,{category})
+        }
         Promise.props({
-            reData:pictureModel.find({},'_id name url  category thumbnail createAt updateAt',options).populate('category','name'),
-            totalRecord:pictureModel.count({})
+            reData:pictureModel.find(params,'_id url category',options).populate('category','name'),
+            totalRecord:pictureModel.count(params)
         }).then(reData => {
             if(!reData){
                 return tools.sendResult(res,1000);
             }
+            reData.reData = reData.reData.map((item)=>{
+                item.url = config.imgDomain+item.url
+                return item;
+            })
             tools.sendResult(res,0,reData);
         }).catch(err =>{
             return next(err)
