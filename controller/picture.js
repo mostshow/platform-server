@@ -144,7 +144,25 @@ const picture = {
     },
 
     del : function(req, res, next) {
-        baseController.del.apply(pictureModel,arguments)
+
+        let id = tools.getParam(req,'id');
+        let url = tools.getParam(req,'url');
+        if (id&&url) {
+                co(function* () {
+                    let result = yield client.delete(url);
+                    console.log(result)
+                    pictureModel.remove({_id: id}).then((redata) => {
+                        tools.sendResult(res,0);
+                    }).catch(err =>{
+                        return tools.sendResult(res,-5);
+                    })
+                }).catch(function (err) {
+                    console.log(err);
+                    return tools.sendResult(res,600);
+                });
+        }else{
+            return tools.sendResult(res,600);
+        }
     },
 
     list : function(req, res,next){
