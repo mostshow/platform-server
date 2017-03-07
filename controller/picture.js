@@ -146,7 +146,7 @@ const picture = {
     del : function(req, res, next) {
 
         let id = tools.getParam(req,'id');
-        let url = tools.getParam(req,'url');
+        let url = tools.getParam(req,'url').replace(config.imgDomain,'');
         if (id&&url) {
                 co(function* () {
                     let result = yield client.delete(url);
