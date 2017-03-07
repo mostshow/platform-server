@@ -152,14 +152,18 @@ const project = {
 
         let dataFrom = tools.getParam(req,'dataFrom')||config.defaultDataFrom;
         let dataCount = tools.getParam(req,'dataCount')||config.defaultDataCount;
+        let category = tools.getParam(req,'category')
         let options = {skip: Number(dataFrom), limit: Number(dataCount), sort: {createAt: -1}};
+        let params = {}
+        if(category != 0){
+            Object.assign(params,{category})
+        }
         Promise.props({
-            reData:ProjectModel.find({})
+            reData:ProjectModel.find(params)
             .populate('category','name')
-            // .populate('publish','publishName')
             .populate('createBy','username')
             .populate('updateBy','username'),
-            totalRecord:ProjectModel.count({})
+            totalRecord:ProjectModel.count(params)
         }).then(reData => {
             if(_.isEmpty(reData)){
                 return tools.sendResult(res,1000);

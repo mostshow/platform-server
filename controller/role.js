@@ -60,7 +60,7 @@ const Role = {
     },
 
     del : function(req, res, next) {
-        baseController.del.apply(pictureModel,arguments)
+        baseController.del.apply(RoleModel,arguments)
     },
 
     list : function(req, res){

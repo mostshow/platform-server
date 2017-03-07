@@ -83,32 +83,6 @@ const picture = {
         })
 
     },
-    upload : function(req, res, next){
-        let posterData = req.files.uploadPoster
-        let name = tools.getParam(req,'name');
-        let categoryId = tools.getParam(req,'categoryId');
-        let filePath = posterData.path
-        let originalFilename = posterData.originalFilename
-
-        if (originalFilename) {
-            fs.readFile(filePath, function(err, data) {
-                var timestamp = Date.now()
-                var type = posterData.type.split('/')[1]
-                var poster = timestamp + '.' + type
-                var newPath = path.join(__dirname, '../upload/' + poster)
-
-                fs.writeFile(newPath, data, function(err) {
-                    if (err) {
-                        return tools.sendResult(res,500)
-                    }
-                    // req.poster = poster
-                    return tools.sendResult(res,0)
-                })
-            })
-        }else{
-            return tools.sendResult(res,-1);
-        }
-    },
     edit : function(req, res, next){
         // let operateName = tools.getParam(req,'key');
         let name = tools.getParam(req,'name');

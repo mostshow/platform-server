@@ -53,7 +53,7 @@ UserSchema.statics = {
         // return this.find(param,field,options).sort('createAt').exec(cb)
     },
     getUserByUserName: function(username, cb) {
-        return this.findOne({ 'username': username }).populate('roleId','rolename').exec(cb);
+        return this.findOne({ 'username': username }).populate('roleId','rolename roleId').exec(cb);
     },
     getUserById: function(id, cb){
         return this.findOne({ _id: id }).exec(cb);

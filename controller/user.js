@@ -108,7 +108,7 @@ const User = {
 
     },
     del : function(req, res, next) {
-        baseController.del.apply(pictureModel,arguments)
+        baseController.del.apply(UserModel,arguments)
     },
     edit : function(req, res, next){
         let username = tools.getParam(req,'username');

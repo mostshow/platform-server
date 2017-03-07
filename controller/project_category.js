@@ -72,7 +72,7 @@ const projectCategory = {
             if(!reData){
                 return tools.sendResult(res,1000);
             }
-            tools.sendResult(res,0,reData);
+            return tools.sendResult(res,0,reData);
         }).catch(err =>{
             return tools.sendResult(res,600);
         })

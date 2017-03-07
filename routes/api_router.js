@@ -33,14 +33,14 @@ const publishController= require('../controller/publish');
  * user
  */
 //管理员
-router.use('/user/create',userController.create);
+router.use('/user/create',CertMiddleWare.adminRequired,userController.create);
 router.use('/user/list',CertMiddleWare.adminRequired,userController.list);
 router.use('/user/del',CertMiddleWare.adminRequired,userController.del);
 router.use('/user/edit',CertMiddleWare.adminRequired,userController.edit);
 
 
 
-router.use('/project/img/download',CertMiddleWare.accessControl);
+router.use('/project/img/download',CertMiddleWare.adminRequired,CertMiddleWare.accessControl);
 
 /**
  * role
@@ -77,11 +77,10 @@ router.use('/varconfig/view',CertMiddleWare.adminRequired,varConfigController.vi
  */
 
 router.use('/image/create',CertMiddleWare.userRequired,pictureController.create)
-router.use('/image/list',pictureController.list)
+router.use('/image/list',CertMiddleWare.userRequired,pictureController.list)
 router.use('/image/edit',CertMiddleWare.userRequired,pictureController.edit)
 router.use('/image/del',CertMiddleWare.userRequired,pictureController.del)
-router.use('/image/view',pictureController.view)
-router.use('/image/upload',CertMiddleWare.userRequired,pictureController.upload)
+router.use('/image/view',CertMiddleWare.userRequired,pictureController.view)
 
 /**
  * pic_category
@@ -89,10 +88,10 @@ router.use('/image/upload',CertMiddleWare.userRequired,pictureController.upload)
  */
 
 router.use('/imgCategory/create',CertMiddleWare.userRequired,piccategoryController.create)
-router.use('/imgCategory/list',piccategoryController.list)
+router.use('/imgCategory/list',CertMiddleWare.userRequired,piccategoryController.list)
 router.use('/imgCategory/edit',CertMiddleWare.userRequired,piccategoryController.edit)
 router.use('/imgCategory/del',CertMiddleWare.userRequired,piccategoryController.del)
-router.use('/imgCategory/view',piccategoryController.view)
+router.use('/imgCategory/view',CertMiddleWare.userRequired,piccategoryController.view)
 
 
 
@@ -131,7 +130,7 @@ router.use('/project/get',CertMiddleWare.userRequired,projectController.get);
  */
 
 router.use('/proCategory/create',CertMiddleWare.userRequired,projectCategoryController.create)
-router.use('/proCategory/list',projectCategoryController.list)
+router.use('/proCategory/list',CertMiddleWare.userRequired,projectCategoryController.list)
 router.use('/proCategory/edit',CertMiddleWare.userRequired,projectCategoryController.edit)
 router.use('/proCategory/del',CertMiddleWare.userRequired,projectCategoryController.del)
 /**
@@ -139,10 +138,10 @@ router.use('/proCategory/del',CertMiddleWare.userRequired,projectCategoryControl
  *
  */
 
-router.use('/publish/create',publishController.create)
-router.use('/publish/list',publishController.list)
-router.use('/publish/edit',publishController.edit)
-router.use('/publish/del',publishController.del)
+router.use('/publish/create',CertMiddleWare.adminRequired,publishController.create)
+router.use('/publish/list',CertMiddleWare.adminRequired,publishController.list)
+router.use('/publish/edit',CertMiddleWare.adminRequired,publishController.edit)
+router.use('/publish/del',CertMiddleWare.adminRequired,publishController.del)
 
 
 
