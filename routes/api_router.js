@@ -90,7 +90,7 @@ router.use('/image/view',CertMiddleWare.userRequired,pictureController.view)
 router.use('/imgCategory/create',CertMiddleWare.userRequired,piccategoryController.create)
 router.use('/imgCategory/list',CertMiddleWare.userRequired,piccategoryController.list)
 router.use('/imgCategory/edit',CertMiddleWare.userRequired,piccategoryController.edit)
-router.use('/imgCategory/del',CertMiddleWare.userRequired,piccategoryController.del)
+router.use('/imgCategory/del',CertMiddleWare.adminRequired,piccategoryController.del)
 router.use('/imgCategory/view',CertMiddleWare.userRequired,piccategoryController.view)
 
 
@@ -114,7 +114,7 @@ router.use('/prostatus/del',projectStatusController.del)
 router.use('/project/create',CertMiddleWare.userRequired,projectController.create);
 router.use('/project/list',projectController.list);
 router.use('/project/edit',CertMiddleWare.userRequired,projectController.edit);
-router.use('/project/del',CertMiddleWare.userRequired,projectController.del);
+router.use('/project/del',CertMiddleWare.adminRequired,projectController.del);
 router.use('/project/online',CertMiddleWare.userRequired,projectController.online);
 router.use('/project/offline',CertMiddleWare.userRequired,projectController.offline);
 router.use('/project/revert',CertMiddleWare.userRequired,projectController.revert);
@@ -132,14 +132,14 @@ router.use('/project/get',CertMiddleWare.userRequired,projectController.get);
 router.use('/proCategory/create',CertMiddleWare.userRequired,projectCategoryController.create)
 router.use('/proCategory/list',CertMiddleWare.userRequired,projectCategoryController.list)
 router.use('/proCategory/edit',CertMiddleWare.userRequired,projectCategoryController.edit)
-router.use('/proCategory/del',CertMiddleWare.userRequired,projectCategoryController.del)
+router.use('/proCategory/del',CertMiddleWare.adminRequired,projectCategoryController.del)
 /**
  * publish
  *
  */
 
 router.use('/publish/create',CertMiddleWare.adminRequired,publishController.create)
-router.use('/publish/list',CertMiddleWare.adminRequired,publishController.list)
+router.use('/publish/list',CertMiddleWare.userRequired,publishController.list)
 router.use('/publish/edit',CertMiddleWare.adminRequired,publishController.edit)
 router.use('/publish/del',CertMiddleWare.adminRequired,publishController.del)
 
