@@ -23,7 +23,7 @@ app.use(cookieParser(config.certCookieName));
 process.env.NODE_ENV='development';
 
 if (process.env.NODE_ENV=='development') {
-    process.env.MONGO_DB_STR = config.dbConfig; //config.devDbUrl;
+    process.env.MONGO_DB_STR = config.dbConfig ;//config.devDbUrl;
 }
 if (process.env.NODE_ENV=='development') {
     let MongoStore = require('connect-mongo')(session);

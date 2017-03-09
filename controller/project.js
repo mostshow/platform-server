@@ -37,7 +37,8 @@ const project = {
             description : description,
             category : category,
             accessDir:accessDir,
-            commit : commit
+            commit : commit,
+            backupInfo:{}
         }
         ProjectModel.find({gitPath:params.gitPath}).then((reData)=>{
             if(!_.isEmpty(reData)){
@@ -276,9 +277,9 @@ const project = {
                                         deleteBak:deleteBak,
                                         revertVersion:''
                                     }
-                                    backData[publish_id] = backupInfo;
 
-                                    let modify = _.extend(projectReData, {});
+                                    backData[publish_id] = backupInfo;
+                                    let modify = _.extend(projectReData,{backupInfo:backData});
                                     modify.markModified('backupInfo')
                                     modify.save((err, projectReData) => {
                                         if (err) {
@@ -360,11 +361,9 @@ const project = {
                     cmd:'cd '+reData.dir+' && rm -rf '+release+ "\r\nexit\r\n"
                 },function(err,data){
                     if(err) return tools.sendResult(res,501);
-                    console.log(data)
+                    // console.log(data)
                     console.log('http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html')
-                    console.log(projectReData.publish)
                     projectReData.publish = remove(projectReData.publish,publish_id)
-                    console.log(projectReData.publish.indexOf(publish_id))
                     let backData = projectReData.backupInfo || {}
                     let backup = (backData[publish_id]&&projectReData.backupInfo[publish_id].backup)||[];
                     let deleteBak = backup.splice(5);
@@ -376,6 +375,7 @@ const project = {
                     backData[publish_id] = backupInfo;
                     let modify = _.extend(projectReData, {});
                     modify.markModified('backupInfo')
+
                     modify.save((err, projectReData) => {
                         if (err) {
                             return tools.sendResult(res,500)
@@ -438,14 +438,6 @@ const project = {
 
                                     projectReData.publish = remove(projectReData.publish,publish_id)
                                     projectReData.publish.push(publish_id)
-                                    // let backData = projectReData.backupInfo
-                                    // let backup = (backData[publish_id]&&projectReData.backupInfo[publish_id].backup)||[];
-                                    // let deleteBak = backup.splice(5);
-                                    // let backupInfo = {
-                                    //     backup:backup,
-                                    //     deleteBak:deleteBak,
-                                    //     currentVersion:revertVersion
-                                    // }
                                     projectReData.backupInfo[publish_id].revertVersion = revertVersion;
 
                                     let modify = _.extend(projectReData, {});
