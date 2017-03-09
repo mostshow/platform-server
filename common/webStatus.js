@@ -4,7 +4,7 @@
 */
 exports = module.exports = new WebStatus();
 
-var CodeMsg = require("./CodeMsg");
+var CodeMsg = require("./codeMsg");
 
 function WebStatus( code ){
 

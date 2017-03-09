@@ -11,10 +11,7 @@ const apiRouter=require('./routes/api_router');
 const config=require('./config');
 const CertMiddleWare = require('./common/cert');
 const app=express();
-// app.set('views',path.join(__dirname,'../view'));
 
-// app.set('view engine','html');
-// app.engine('html', require('ejs-mate'));
 app.enable('trust proxy');
 
 app.use(express.static(path.join(__dirname,'../view')));
@@ -26,7 +23,7 @@ app.use(cookieParser(config.certCookieName));
 process.env.NODE_ENV='development';
 
 if (process.env.NODE_ENV=='development') {
-    process.env.MONGO_DB_STR = config.devDbUrl;
+    process.env.MONGO_DB_STR = config.dbConfig; //config.devDbUrl;
 }
 if (process.env.NODE_ENV=='development') {
     let MongoStore = require('connect-mongo')(session);
