@@ -1,5 +1,6 @@
 
 'use strict'
+
 const express=require('express');
 const path=require('path');
 const bodyParser=require('body-parser');
@@ -10,20 +11,18 @@ const webRouter=require('./routes/web_router');
 const apiRouter=require('./routes/api_router');
 const config=require('./config');
 const CertMiddleWare = require('./common/cert');
-const app=express();
+const app = express();
 
 app.enable('trust proxy');
 
-app.use(express.static(path.join(__dirname,'../view')));
+app.use(express.static(path.join(__dirname,'../client')));
 // app.set('trust proxy',1) // trust first proxy
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser(config.certCookieName));
 
-process.env.NODE_ENV='development';
-
 if (process.env.NODE_ENV=='development') {
-    process.env.MONGO_DB_STR = config.dbConfig ;//config.devDbUrl;
+    process.env.MONGO_DB_STR = config.devDbUrl;//config.dbConfig;
 }
 if (process.env.NODE_ENV=='development') {
     let MongoStore = require('connect-mongo')(session);
@@ -44,7 +43,7 @@ if (process.env.NODE_ENV=='development') {
     //redis保存session
     const redis = require('redis');
     const RedisStore = require('connect-redis')(session);
-    const client = redis.createClient(config.redis_port, config.redis_port,config.redis_opt);
+    const client = redis.createClient(config.redis_port, config.redis_host,config.redis_opt);
     client.on("error", function(err) {
         console.log("redis client Error " + err);
     });

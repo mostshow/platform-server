@@ -31,13 +31,17 @@ MongooseKeeper.prototype.config = function(conf) {
     if (process.env.MONGO_DB_STR) {
         connStr = process.env.MONGO_DB_STR;
     } else {
-        //'mongodb://user:pass@localhost:port/database'
-        connStr = util.format('mongodb://%s:%s@%s:%d/%s', conf.userid, conf.password, conf.host, conf.port, conf.database);
+        //'mongodb://adeploy_qgz:qgz#2017@10.16.15.101:27017/adeploy'
+         connStr = 'mongodb://{{userid}}:{{password}}@{{host}}:{{port}}/{{database}}'.replace(/\{\{(.*?)\}\}/g,function(item,$1){
+              return conf[$1]
+         })
     }
+
     mongoose.connect(connStr, function(err) {
         if (err) {
+            console.log(connStr)
             console.error('connect to %s error: ', connStr, err.message);
-            // process.exit(1);
+            process.exit(1);
         }
         console.log('connect is ok!')
     });

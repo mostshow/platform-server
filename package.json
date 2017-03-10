@@ -31,13 +31,13 @@
     "lodash": "^4.6.1",
     "moment": "^2.17.1",
     "mongoose": "^4.7.4",
-    "nodegit": "^0.16.0",
     "nodemailer": "^3.1.4",
     "nodemailer-smtp-transport": "^2.7.2",
     "redis": "^2.6.5",
     "ssh2": "^0.5.4",
     "utility": "^1.9.0",
-    "validator": "^6.2.0"
+    "validator": "^6.2.0",
+    "websocket.io": "^0.2.1"
   },
   "devDependencies": {
     "eslint": "^3.13.1",

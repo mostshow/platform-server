@@ -217,6 +217,7 @@ const project = {
                 let release =projectReData.accessDir;
                 let data = fs.readFileSync(local(projectReData.dir)+'/fis-conf.js')
                 let newData = data.toString().replace('$domain$',release);
+                console.log(newData)
                 fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',newData)
                 exec('cd '+local(projectReData.dir)+' &&rm -rf ../'+release+'&& fis3 release -d '+local(release), (error, stdout, stderr) => {
                     if (error) {
@@ -262,7 +263,6 @@ const project = {
                                     cmd:'cd '+reData.dir+' && drf '+release+' ' +release+'-pack.zip  --bak-name='+version+  "\r\nexit\r\n"
                                 },function(err,data){
                                     if(err) return tools.sendResult(res,501);
-                                    console.log(data)
                                     onlineLog += data;
                                     console.log('http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html')
                                     projectReData.publish = remove(projectReData.publish,publish_id)
@@ -295,7 +295,7 @@ const project = {
                                             project:modify.name,
                                             server:reData.publishName,
                                             address:'http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html',
-                                            onlineLog:onlineLog
+                                            // onlineLog:onlineLog
                                         }
                                         tools.sendProjectMail(obj)
                                         tools.logger(obj)
