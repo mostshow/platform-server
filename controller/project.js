@@ -207,35 +207,35 @@ const project = {
 //test
 
 
-            console.log('switch')
-
-            ProjectOp.switch({dir:projectReData.dir,branch:projectReData.branch},function(err){
-                if(err){
-                    console.log(err)
-                    return tools.sendResult(res,500);
+            PublishModel.getById(publish_id).then((reData)=>{
+                if(_.isEmpty(reData)){
+                    return tools.sendResult(res,1000);
                 }
-                let release =projectReData.accessDir;
-                let data = fs.readFileSync(local(projectReData.dir)+'/fis-conf.js')
-                let newData = data.toString().replace('$domain$',release);
-                console.log(newData)
-                fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',newData)
-                exec('cd '+local(projectReData.dir)+' &&rm -rf ../'+release+'&& fis3 release -d '+local(release), (error, stdout, stderr) => {
-                    if (error) {
-                        console.error(`exec error: ${error}`);
+                console.log('switch')
+
+                ProjectOp.switch({dir:projectReData.dir,branch:projectReData.branch},function(err){
+                    if(err){
+                        console.log(err)
                         return tools.sendResult(res,500);
                     }
-                    onlineLog += stdout;
-                    exec('cd '+local()+' && drf '+ release +' --pack',(error, stdout, stderr) => {
+                    let release =projectReData.accessDir;
+                    let domain = reData.generate?release:''
+                    let data = fs.readFileSync(local(projectReData.dir)+'/fis-conf.js')
+                    let newData = data.toString().replace('$domain$',domain);
+                    fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',newData)
+                    exec('cd '+local(projectReData.dir)+'git checkout . &&rm -rf ../'+release+'&& fis3 release -d '+local(release), (error, stdout, stderr) => {
                         if (error) {
                             console.error(`exec error: ${error}`);
                             return tools.sendResult(res,500);
                         }
-                        console.log(`stdout: ${stdout}`);
                         onlineLog += stdout;
-                        PublishModel.getById(publish_id).then((reData)=>{
-                            if(_.isEmpty(reData)){
-                                return tools.sendResult(res,1000);
+                        exec('cd '+local()+' && drf '+ release +' --pack',(error, stdout, stderr) => {
+                            if (error) {
+                                console.error(`exec error: ${error}`);
+                                return tools.sendResult(res,500);
                             }
+                            console.log(`stdout: ${stdout}`);
+                            onlineLog += stdout;
                             let conn_ip = reData.ip;
                             // let sftp = _.keyBy(config.connConfig.sftp, 'host');
                             let sftp = _.keyBy(config.connConfig.ssh, 'host');
@@ -285,10 +285,6 @@ const project = {
                                         if (err) {
                                             return tools.sendResult(res,500)
                                         }
-
-                                        let data = fs.readFileSync(local(projectReData.dir)+'/fis-conf.js')
-                                        let newData = data.toString().replace(release,'$domain$');
-                                        fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',newData)
                                         let obj = {
                                             username:req.session.user.username,
                                             action:'上线',
