@@ -102,7 +102,6 @@ const CertMiddleWare = {
      * 验证用户是否登录
      */
     authUser:function(req, res, next) {
-        console.log(req.session)
         if (req.session.user) {
             setUser(req.session.user);
         } else {

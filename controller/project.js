@@ -192,7 +192,7 @@ const project = {
                 return tools.sendResult(res,1000);
             }
 
-//test
+            //test
             // projectReData.publish = remove(projectReData.publish,publish_id)
             // projectReData.publish.push(publish_id)
             // let modify = _.extend(projectReData, {});
@@ -204,7 +204,7 @@ const project = {
             // })
             // return;
 
-//test
+            //test
 
 
             PublishModel.getById(publish_id).then((reData)=>{
@@ -223,7 +223,7 @@ const project = {
                     let data = fs.readFileSync(local(projectReData.dir)+'/fis-conf.js')
                     let newData = data.toString().replace('$domain$',domain);
                     fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',newData)
-                    exec('cd '+local(projectReData.dir)+'git checkout . &&rm -rf ../'+release+'&& fis3 release -d '+local(release), (error, stdout, stderr) => {
+                    exec('cd '+local(projectReData.dir)+'&&git checkout . &&rm -rf ../'+release+'&& fis3 release -d '+local(release), (error, stdout, stderr) => {
                         if (error) {
                             console.error(`exec error: ${error}`);
                             return tools.sendResult(res,500);
@@ -239,6 +239,9 @@ const project = {
                             let conn_ip = reData.ip;
                             // let sftp = _.keyBy(config.connConfig.sftp, 'host');
                             let sftp = _.keyBy(config.connConfig.ssh, 'host');
+                            console.log(config.connConfig.ssh)
+                            console.log(sftp)
+                            console.log(conn_ip)
                             let connConfig = {
                                 host: sftp[conn_ip]['host'],
                                 port: 22,
@@ -300,14 +303,14 @@ const project = {
                                     })
                                 })
                             })
-                        }).catch(err => {
-                            console.log(err);
-                            return tools.sendResult(res,600);
-                        });
-                        // tools.sendResult(res,0)
-                    })
-                });
-            })
+                        })
+                    });
+                })
+            }).catch(err => {
+                console.log(err);
+                return tools.sendResult(res,600);
+            });
+            // tools.sendResult(res,0)
         }).catch(err => {
             //return next(err);
             return tools.sendResult(res,600);
@@ -325,7 +328,7 @@ const project = {
             if(_.isEmpty(projectReData)){
                 return tools.sendResult(res,1000);
             }
-//test
+            //test
             // projectReData.publish = remove(projectReData.publish,publish_id)
             // console.log(projectReData.publish.indexOf(publish_id))
             // let modify = _.extend(projectReData, {});
@@ -336,7 +339,7 @@ const project = {
             //     tools.sendResult(res,0)
             // })
             // return;
-//test
+            //test
             let release =projectReData.accessDir;
 
             PublishModel.getById(publish_id).then((reData)=>{
@@ -393,7 +396,7 @@ const project = {
                 return tools.sendResult(res,600);
             });
         }).catch(err => {
-                console.log(err);
+            console.log(err);
             //return next(err);
             return tools.sendResult(res,600);
         });
@@ -409,57 +412,57 @@ const project = {
             if(_.isEmpty(projectReData)){
                 return tools.sendResult(res,1000);
             }
-                let release =projectReData.accessDir;
-                        PublishModel.getById(publish_id).then((reData)=>{
-                            if(_.isEmpty(reData)){
-                                return tools.sendResult(res,1000);
-                            }
-                            let conn_ip = reData.ip;
-                            // let sftp = _.keyBy(config.connConfig.sftp, 'host');
-                            let sftp = _.keyBy(config.connConfig.ssh, 'host');
-                            let connConfig = {
-                                host: sftp[conn_ip]['host'],
-                                port: 22,
-                                username: sftp[conn_ip]['name'],
-                                password: sftp[conn_ip]['pass'],
-                            }
-                                Client.Shell({
-                                    connConfig:connConfig,
-                                    cmd:'cd '+reData.dir+' && cp ./backup/'+revertVersion+' '+revertVersion+'&&drf '+release+' ' +revertVersion+'  --unpack  \r\nexit\r\n'
-                                },function(err,data){
-                                    if(err) return tools.sendResult(res,501);
+            let release =projectReData.accessDir;
+            PublishModel.getById(publish_id).then((reData)=>{
+                if(_.isEmpty(reData)){
+                    return tools.sendResult(res,1000);
+                }
+                let conn_ip = reData.ip;
+                // let sftp = _.keyBy(config.connConfig.sftp, 'host');
+                let sftp = _.keyBy(config.connConfig.ssh, 'host');
+                let connConfig = {
+                    host: sftp[conn_ip]['host'],
+                    port: 22,
+                    username: sftp[conn_ip]['name'],
+                    password: sftp[conn_ip]['pass'],
+                }
+                Client.Shell({
+                    connConfig:connConfig,
+                    cmd:'cd '+reData.dir+' && cp ./backup/'+revertVersion+' '+revertVersion+'&&drf '+release+' ' +revertVersion+'  --unpack  \r\nexit\r\n'
+                },function(err,data){
+                    if(err) return tools.sendResult(res,501);
 
-                                    console.log(data)
-                                    console.log('http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html')
+                    console.log(data)
+                    console.log('http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html')
 
-                                    projectReData.publish = remove(projectReData.publish,publish_id)
-                                    projectReData.publish.push(publish_id)
-                                    projectReData.backupInfo[publish_id].revertVersion = revertVersion;
+                    projectReData.publish = remove(projectReData.publish,publish_id)
+                    projectReData.publish.push(publish_id)
+                    projectReData.backupInfo[publish_id].revertVersion = revertVersion;
 
-                                    let modify = _.extend(projectReData, {});
-                                    modify.markModified('backupInfo')
-                                    modify.save((err, projectReData) => {
-                                        if (err) {
-                                            return tools.sendResult(res,500)
-                                        }
-                                        let obj = {
-                                            username:req.session.user.username,
-                                            action:'回滚',
-                                            project:modify.name,
-                                            version:revertVersion,
-                                            server:reData.publishName,
-                                            address:'http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html'
-                                        }
-                                        tools.logger(obj)
-                                        tools.sendProjectMail(obj)
-                                        return tools.sendResult(res,0,projectReData)
+                    let modify = _.extend(projectReData, {});
+                    modify.markModified('backupInfo')
+                    modify.save((err, projectReData) => {
+                        if (err) {
+                            return tools.sendResult(res,500)
+                        }
+                        let obj = {
+                            username:req.session.user.username,
+                            action:'回滚',
+                            project:modify.name,
+                            version:revertVersion,
+                            server:reData.publishName,
+                            address:'http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html'
+                        }
+                        tools.logger(obj)
+                        tools.sendProjectMail(obj)
+                        return tools.sendResult(res,0,projectReData)
 
-                                    })
-                                })
-                        }).catch(err => {
-                            console.log(err);
-                            return tools.sendResult(res,600);
-                        });
+                    })
+                })
+            }).catch(err => {
+                console.log(err);
+                return tools.sendResult(res,600);
+            });
         }).catch(err => {
             //return next(err);
             return tools.sendResult(res,600);
