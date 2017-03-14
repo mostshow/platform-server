@@ -84,28 +84,27 @@ const project = {
 
     edit : function(req, res, next){
         let name = tools.getParam(req,'name');
-        let dir = tools.getParam(req,'dir');
+        let accessDir = tools.getParam(req,'accessDir');
         let gitPath = tools.getParam(req,'gitPath');
         let home = tools.getParam(req,'home');
         let domain = tools.getParam(req,'domain');
+        let branch = tools.getParam(req,'branch');
         let category = tools.getParam(req,'category');
         let status = tools.getParam(req,'status');
         let description = tools.getParam(req,'description');
         let id = tools.getParam(req,'id');
-        if (tools.notEmpty([name, id ,dir])) {
-            return tools.sendResult(res,-1);
-        }
         let _record = {
             name:name,
-            dir:dir,
+            accessDir:accessDir,
             gitPath:gitPath,
             category:category,
             description:description,
+            branch:branch,
             updateBy :req.session.user._id,
             _id:id
         }
 
-        if (tools.notEmpty([name])) {
+        if (tools.notEmpty([name, id ,accessDir])) {
             return tools.sendResult(res,-1);
         }
         ProjectModel.getById(_record._id).then( reData => {
@@ -181,7 +180,7 @@ const project = {
         //     _id : tools.getParam(req,'id'),
         //     status : tools.getParam(req,'status'),
         // }
-        let onlineLog = ''
+        let  onlineLog = ''
         let  project_id = tools.getParam(req,'project_id')//project
         let  publish_id = tools.getParam(req,'publish_id');//publish
         if (tools.notEmpty([project_id,publish_id])) {
@@ -223,7 +222,7 @@ const project = {
                     let data = fs.readFileSync(local(projectReData.dir)+'/fis-conf.js')
                     let newData = data.toString().replace('$domain$',domain);
                     fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',newData)
-                    exec('cd '+local(projectReData.dir)+'&&git checkout . &&rm -rf ../'+release+'&& fis3 release -d '+local(release), (error, stdout, stderr) => {
+                    exec('cd '+local(projectReData.dir)+'&&rm -rf ../'+release+'&& fis3 release -d '+local(release) +' &&git checkout . ', (error, stdout, stderr) => {
                         if (error) {
                             console.error(`exec error: ${error}`);
                             return tools.sendResult(res,500);
@@ -239,9 +238,6 @@ const project = {
                             let conn_ip = reData.ip;
                             // let sftp = _.keyBy(config.connConfig.sftp, 'host');
                             let sftp = _.keyBy(config.connConfig.ssh, 'host');
-                            console.log(config.connConfig.ssh)
-                            console.log(sftp)
-                            console.log(conn_ip)
                             let connConfig = {
                                 host: sftp[conn_ip]['host'],
                                 port: 22,
@@ -389,6 +385,7 @@ const project = {
                         }
                         tools.logger(obj)
                         tools.sendProjectMail(obj)
+                        return tools.sendResult(res,0,projectReData)
                     })
                 })
             }).catch(err => {
@@ -426,9 +423,10 @@ const project = {
                     username: sftp[conn_ip]['name'],
                     password: sftp[conn_ip]['pass'],
                 }
+                let revertVersionZip = revertVersion + '.zip'
                 Client.Shell({
                     connConfig:connConfig,
-                    cmd:'cd '+reData.dir+' && cp ./backup/'+revertVersion+' '+revertVersion+'&&drf '+release+' ' +revertVersion+'  --unpack  \r\nexit\r\n'
+                    cmd:'cd '+reData.dir+' && cp ./backup/'+revertVersionZip+' '+revertVersionZip+'&&drf '+release+' ' +revertVersionZip+'  --unpack  \r\nexit\r\n'
                 },function(err,data){
                     if(err) return tools.sendResult(res,501);
 

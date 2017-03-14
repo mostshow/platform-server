@@ -57,7 +57,7 @@ const User = {
 
         UserModel.getUserByUserName(username).then(user => {
             if (!user) {
-                return tools.sendResult(res,1000);
+                return tools.sendResult(res,-9);
             }
             let passhash = user.password;
             user.comparePassword(password, (err, isMatch)=> {
@@ -76,7 +76,7 @@ const User = {
                     }
                     tools.sendResult(res,0,result)
                 }else{
-                    tools.sendResult(res,1000)
+                    tools.sendResult(res,-9)
                 }
             })
         }).catch(err => {
@@ -159,14 +159,14 @@ const User = {
     modify : function(req, res, next){
 
         let username = tools.getParam(req,'username');
-        let password = tools.getParam(req,'password');
-        let newPassword = tools.getParam(req,'newPassword');
+        let password = tools.getParam(req,'opassword');
+        let newPassword = tools.getParam(req,'password');
         let rePassword = tools.getParam(req,'rePassword');
         let id = tools.getParam(req,"id");
-        if (!username || !password|| !newPassword|| !id || !rePassword) {
+
+        if (tools.notEmpty([username, password,  newPassword, rePassword, id])) {
             return tools.sendResult(res,-1);
         }
-
         if (newPassword !== rePassword) {
             return tools.sendResult(res,-6);;
         }
