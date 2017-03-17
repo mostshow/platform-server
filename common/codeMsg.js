@@ -38,5 +38,7 @@ module.exports = {
 		1012: "解压文件失败",
 		1013: "只支持zip",
 		1014: "您不是管理员,无法删除项目"
+		1015: "/modules/common/api/api.js 读取失败"
+		1016: "fis-conf.js 读取失败"
 	}
 };
