@@ -79,7 +79,7 @@ router.use('/varconfig/view',CertMiddleWare.adminRequired,varConfigController.vi
 router.use('/image/create',CertMiddleWare.userRequired,pictureController.create)
 router.use('/image/list',CertMiddleWare.userRequired,pictureController.list)
 router.use('/image/edit',CertMiddleWare.userRequired,pictureController.edit)
-router.use('/image/del',CertMiddleWare.userRequired,pictureController.del)
+router.use('/image/del',CertMiddleWare.adminRequired,pictureController.del)
 router.use('/image/view',CertMiddleWare.userRequired,pictureController.view)
 
 /**
@@ -113,7 +113,7 @@ router.use('/prostatus/del',projectStatusController.del)
  */
 router.use('/project/create',CertMiddleWare.userRequired,projectController.create);
 router.use('/project/list',projectController.list);
-router.use('/project/edit',CertMiddleWare.userRequired,projectController.edit);
+router.use('/project/edit',CertMiddleWare.adminRequired,projectController.edit);
 router.use('/project/del',CertMiddleWare.adminRequired,projectController.del);
 router.use('/project/online',CertMiddleWare.userRequired,projectController.online);
 router.use('/project/offline',CertMiddleWare.userRequired,projectController.offline);
