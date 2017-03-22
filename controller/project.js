@@ -265,12 +265,21 @@ const project = {
                                     console.log(err)
                                     return tools.sendResult(res,500)
                                 }
-
+                                let deleteBakStr = ''
                                 onlineLog += data;
                                 let version = getVersion();
+                                let backData = projectReData.backupInfo || {}
+                                let backup = (backData[publish_id]&&projectReData.backupInfo[publish_id].backup)||[];
+                                let deleteBak = (backData[publish_id]&&projectReData.backupInfo[publish_id].deleteBak)||[];
+                                if(!_.isEmpty(deleteBak)){
+                                    deleteBak =  deleteBak.map(function(item){
+                                        return item+'.zip'
+                                    })
+                                    deleteBakStr = '&&rm -rf ' + deleteBak.join(' ')
+                                }
                                 Client.Shell({
                                     connConfig:connConfig,
-                                    cmd:'cd '+reData.dir+' && drf '+release+' ' +release+'-pack.zip  --bak-name='+version+  "\r\nexit\r\n"
+                                    cmd:'cd '+reData.dir+deleteBakStr+' && drf '+release+' ' +release+'-pack.zip  --bak-name='+version+  "\r\nexit\r\n"
                                 },function(err,data){
                                     if(err) return tools.sendResult(res,501);
                                     onlineLog += data;
@@ -278,8 +287,6 @@ const project = {
                                     projectReData.publish = remove(projectReData.publish,publish_id)
                                     projectReData.publish.push(publish_id)
 
-                                    let backData = projectReData.backupInfo || {}
-                                    let backup = (backData[publish_id]&&projectReData.backupInfo[publish_id].backup)||[];
                                     backup.unshift(release+'-bak-'+version);
                                     let deleteBak = backup.splice(5);
                                     let backupInfo = {
