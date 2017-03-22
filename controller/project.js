@@ -159,7 +159,7 @@ const project = {
             Object.assign(params,{category})
         }
         Promise.props({
-            reData:ProjectModel.find(params)
+            reData:ProjectModel.find(params,'',options)
             .populate('category','name')
             .populate('createBy','username')
             .populate('updateBy','username'),
