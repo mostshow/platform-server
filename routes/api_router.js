@@ -54,7 +54,7 @@ router.use('/roles/del',CertMiddleWare.adminRequired,roleController.del);
  * operateRole
  *
  */
-router.use('/operateRole/create',operateRoleController.create)
+router.use('/operateRole/create',CertMiddleWare.adminRequired,operateRoleController.create)
 router.use('/operateRole/list',CertMiddleWare.adminRequired,operateRoleController.list)
 router.use('/operateRole/edit',CertMiddleWare.adminRequired,operateRoleController.edit)
 router.use('/operateRole/del',CertMiddleWare.adminRequired,operateRoleController.del)
