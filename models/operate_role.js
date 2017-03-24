@@ -14,8 +14,6 @@ const OperateRoleSchema = new Schema({
 
 });
 
-OperateRoleSchema.index({route : 1 }, { unique: true });
-OperateRoleSchema.index({roleId : 1 }, { unique: true });
 OperateRoleSchema.pre('save' , function(next){
     if (this.isNew) {
         this.createAt = Date.now();

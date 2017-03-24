@@ -56,10 +56,10 @@ const CertMiddleWare = {
         if (!req.session.user) {
             return res.send(WebStatus.init(-3).toJSON());
         }
-        if (req.session.userRoleId != config.adminRoleId ) {
+        // if (req.session.userRoleId != config.adminRoleId ) {
 
             let url = req.baseUrl;
-            let singleUrl = url.replace('/api','');
+            let singleUrl = url.replace('/api/','');
             let tempUrl = singleUrl.split('/');
 
             tempUrl.pop();
@@ -73,8 +73,8 @@ const CertMiddleWare = {
                 let singleArr = (reData.singleData&&reData.singleData.roleId)||[];
                 let multipleDataArr = (reData.multipleData&&reData.multipleData.roleId)||[];
                 let roleId =req.session.user.roleId;
-
-                if(~multipleDataArr.concat(singleArr).indexOf(roleId)){
+                let tempArr = multipleDataArr.concat(singleArr).map(function(item){return String(item)})
+                if(~tempArr.indexOf(String(roleId))){
                     next()
                 }else{
                     res.send(WebStatus.init(403).toJSON());
@@ -82,9 +82,9 @@ const CertMiddleWare = {
             }).catch(err =>{
                 res.send(WebStatus.init(500).toJSON());
             })
-        }else{
-            next()
-        }
+        // }else{
+        //     next()
+        // }
     },
     /**
      * setHeader
@@ -92,8 +92,8 @@ const CertMiddleWare = {
      */
     setHeader: function(req, res, next){
         //res.setHeader("Content-Type","text/html;charset=utf-8");
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        // res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3011/');
+        // res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3011');
         res.setHeader('Access-Control-Allow-Credentials', true);
         res.setHeader('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS');
         res.setHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");

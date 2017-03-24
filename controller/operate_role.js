@@ -20,13 +20,15 @@ const OperateRole = {
         if(!_.isArray(roleIdArr)){
             roleIdArr = roleIdArr.split(',');
         }
+        console.log(roleIdArr)
         OperateRoleModel.create({
             operateName:operateName,
             route:route,
             roleId:roleIdArr
         }).then(role =>{
-            tools.sendResult(res,0);
+            return tools.sendResult(res,0);
         }).catch(err => {
+            console.log(err)
                 // return next(err);
             return tools.sendResult(res,600);
         })
