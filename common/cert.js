@@ -92,8 +92,8 @@ const CertMiddleWare = {
      */
     setHeader: function(req, res, next){
         //res.setHeader("Content-Type","text/html;charset=utf-8");
-        // res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3011');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        // res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3011');
         res.setHeader('Access-Control-Allow-Credentials', true);
         res.setHeader('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS');
         res.setHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
