@@ -13,6 +13,38 @@ const jwt = require('jsonwebtoken');
 
 
 const User = {
+/**
+  @api {POST} /user/create 创建用户
+  @apiVersion 1.0.0
+  @apiName create
+  @apiGroup user
+
+  @apiExample Example usage:
+    curl -H "Content-Type: application/json" -X POST http://localhost:3000/user/create
+        user = {
+            username:username,
+            password:password,
+            rePassword:rePassword,
+            email:email,
+            roleId:roleId
+        }
+
+  @apiSuccessExample {json} Success-Response:
+    HTTP/1.1 200 OK
+    {
+        code : 0,
+        msg: "msg",
+        result:{}
+    }
+
+  @apiErrorExample {json} Error-Response:
+    HTTP/1.1 422 Unprocessable Entity
+      {
+        status: -1,
+        msg": "error",
+        result:{}
+      }
+ */
     create : function(req, res, next) {
         let username = tools.getParam(req,'username');
         let password = tools.getParam(req,'password');
@@ -48,6 +80,35 @@ const User = {
             return tools.sendResult(res,-1);
         });
     },
+/**
+  @api {POST} /user/login 登录
+  @apiVersion 1.0.0
+  @apiName login
+  @apiGroup user
+
+  @apiExample Example usage:
+    curl -H "Content-Type: application/json" -X POST http://localhost:3000/user/login
+        user = {
+            username:username,
+            password:password,
+        }
+
+  @apiSuccessExample {json} Success-Response:
+    HTTP/1.1 200 OK
+    {
+        code : 0,
+        msg: "msg",
+        result:{}
+    }
+
+  @apiErrorExample {json} Error-Response:
+    HTTP/1.1 422 Unprocessable Entity
+      {
+        status: -1,
+        msg": "error",
+        result:{}
+      }
+ */
     login : function(req, res, next) {
         let username = tools.getParam(req,'username');
         let password = tools.getParam(req,'password');
@@ -85,6 +146,31 @@ const User = {
         });
 
     },
+    /**
+      @api {GET} /user/logout    登出
+      @apiVersion 1.0.0
+      @apiName   logout
+      @apiGroup   user
+
+      @apiExample Example usage:
+        curl -H "Content-Type: application/json" -X POST http://localhost:3000/user/logout
+
+      @apiSuccessExample {json} Success-Response:
+        HTTP/1.1 200 OK
+        {
+            code : 0,
+            msg: "msg",
+            result:{}
+        }
+
+      @apiErrorExample {json} Error-Response:
+        HTTP/1.1 422 Unprocessable Entity
+          {
+            status: -1,
+            msg": "error",
+            result:{}
+          }
+     */
     logout : function(req, res, next) {
         req.session.destroy();
         res.clearCookie(config.certCookieName, {
@@ -92,6 +178,47 @@ const User = {
         });
         tools.sendResult(res,0)
     },
+
+    /**
+      @api {POST} /user/list 用户列表
+      @apiVersion 1.0.0
+      @apiName list
+      @apiGroup user
+
+      @apiExample Example usage:
+        curl -H "Content-Type: application/json" -X POST http://localhost:3000/user/list
+        {
+            dataFrom:0,
+            dataCount:10
+        }
+
+      @apiSuccessExample {json} Success-Response:
+        HTTP/1.1 200 OK
+        {
+            code : 0,
+            msg: "msg",
+            result:{
+                reData:{
+                    _id:'58d495809b2c8f126575f0c8',
+                    createAt:'2017-03-24T03:41:52.171Z',
+                    email:'yunwei@qguanzi.com',
+                    username:'username',
+                    roleId:{
+                        _id:'58d491f29b2c8f126575f0b4',
+                        rolename:'运维'
+                    }
+                }
+            }
+        }
+
+      @apiErrorExample {json} Error-Response:
+        HTTP/1.1 422 Unprocessable Entity
+          {
+            status: -1,
+            msg": "error",
+            result:{}
+          }
+     */
     list : function(req,res,next){
 
         let dataFrom = tools.getParam(req,'dataFrom')||config.defaultDataFrom;
@@ -107,9 +234,75 @@ const User = {
         })
 
     },
+
+    /**
+      @api {POST} /user/del 删除用户
+      @apiVersion 1.0.0
+      @apiName del
+      @apiGroup user
+
+      @apiExample Example usage:
+        curl -H "Content-Type: application/json" -X POST http://localhost:3000/user/del
+        {
+            _id:'58d491f29b2c8f126575f0b4'
+        }
+
+      @apiSuccessExample {json} Success-Response:
+        HTTP/1.1 200 OK
+        {
+            code : 0,
+            msg: "msg",
+            result:{}
+        }
+
+      @apiErrorExample {json} Error-Response:
+        HTTP/1.1 422 Unprocessable Entity
+          {
+            status: -1,
+            msg": "error",
+            result:{}
+          }
+     */
     del : function(req, res, next) {
         baseController.del.apply(UserModel,arguments)
     },
+
+
+    /**
+      @api {POST} /user/edit 编辑用户
+      @apiVersion 1.0.0
+      @apiName edit
+
+      @apiGroup user
+
+      @apiExample Example usage:
+        curl -H "Content-Type: application/json" -X POST http://localhost:3000/user/edit
+        {
+            username:'username',
+            password:'password',
+            rePassword:'rePassword',
+            roleId:'roleId',
+            email:'email',
+            id:'id'
+        }
+
+      @apiSuccessExample {json} Success-Response:
+        HTTP/1.1 200 OK
+        {
+            code : 0,
+            msg: "msg",
+            result:{
+            }
+        }
+
+      @apiErrorExample {json} Error-Response:
+        HTTP/1.1 422 Unprocessable Entity
+          {
+            status: -1,
+            msg": "error",
+            result:{}
+          }
+     */
     edit : function(req, res, next){
         let username = tools.getParam(req,'username');
         let password = tools.getParam(req,'password');
@@ -156,6 +349,40 @@ const User = {
             return tools.sendResult(res,-1);
         });
     },
+
+    /**
+      @api {POST} /user/modify 个人资料修改
+      @apiVersion 1.0.0
+      @apiName modify
+      @apiGroup user
+
+      @apiExample Example usage:
+        curl -H "Content-Type: application/json" -X POST http://localhost:3000/user/modify
+        {
+            username:'username',
+            password:'password',
+            opassword:'opassword',
+            rePassword:'rePassword',
+            id:'id'
+        }
+
+      @apiSuccessExample {json} Success-Response:
+        HTTP/1.1 200 OK
+        {
+            code : 0,
+            msg: "msg",
+            result:{
+            }
+        }
+
+      @apiErrorExample {json} Error-Response:
+        HTTP/1.1 422 Unprocessable Entity
+          {
+            status: -1,
+            msg": "error",
+            result:{}
+          }
+     */
     modify : function(req, res, next){
 
         let username = tools.getParam(req,'username');

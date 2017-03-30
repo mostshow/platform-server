@@ -10,6 +10,10 @@
     "start": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "apidoc": {
+    "title": "deploy--API文档",
+    "url": "localhost:3000"
+  },
   "author": "lyndon",
   "license": "ISC",
   "dependencies": {
