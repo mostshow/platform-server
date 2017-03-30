@@ -19,15 +19,22 @@ const User = {
   @apiName create
   @apiGroup user
 
+      @apiParam {String} username  用户
+      @apiParam {String} password  密码
+      @apiParam {String} rePassword 确认密码
+      @apiParam {String} roleId   角色id
+      @apiParam {String} email   邮箱
+
+      @apiParamExample {json} Request-Example:
+        {
+            username:'username',
+            password:'password',
+            rePassword:'rePassword',
+            roleId:'roleId',
+            email:'email',
+        }
   @apiExample Example usage:
     curl -H "Content-Type: application/json" -X POST http://localhost:3000/user/create
-        user = {
-            username:username,
-            password:password,
-            rePassword:rePassword,
-            email:email,
-            roleId:roleId
-        }
 
   @apiSuccessExample {json} Success-Response:
     HTTP/1.1 200 OK
@@ -86,12 +93,16 @@ const User = {
   @apiName login
   @apiGroup user
 
+  @apiParam {String} username  用户名
+  @apiParam {String} password   密码
+
+  @apiParamExample {json} Request-Example:
+      {
+        "username": "username",
+        "password": "password"
+      }
   @apiExample Example usage:
     curl -H "Content-Type: application/json" -X POST http://localhost:3000/user/login
-        user = {
-            username:username,
-            password:password,
-        }
 
   @apiSuccessExample {json} Success-Response:
     HTTP/1.1 200 OK
@@ -185,12 +196,17 @@ const User = {
       @apiName list
       @apiGroup user
 
+      @apiParam {Number} dataCount  每页条数
+      @apiParam {Number} dataFrom   开始条数
+
+      @apiParamExample {json} Request-Example:
+          {
+            "dataCount": 10,
+            "dataFrom": 0
+          }
+
       @apiExample Example usage:
         curl -H "Content-Type: application/json" -X POST http://localhost:3000/user/list
-        {
-            dataFrom:0,
-            dataCount:10
-        }
 
       @apiSuccessExample {json} Success-Response:
         HTTP/1.1 200 OK
@@ -241,11 +257,14 @@ const User = {
       @apiName del
       @apiGroup user
 
+      @apiParam {String} id    用户id
+
+      @apiParamExample {json} Request-Example:
+        {
+            id:'id'
+        }
       @apiExample Example usage:
         curl -H "Content-Type: application/json" -X POST http://localhost:3000/user/del
-        {
-            _id:'58d491f29b2c8f126575f0b4'
-        }
 
       @apiSuccessExample {json} Success-Response:
         HTTP/1.1 200 OK
@@ -275,8 +294,14 @@ const User = {
 
       @apiGroup user
 
-      @apiExample Example usage:
-        curl -H "Content-Type: application/json" -X POST http://localhost:3000/user/edit
+      @apiParam {String} username  用户
+      @apiParam {String} password  密码
+      @apiParam {String} rePassword 确认密码
+      @apiParam {String} roleId   角色id
+      @apiParam {String} email   邮箱
+      @apiParam {String} id    用户id
+
+      @apiParamExample {json} Request-Example:
         {
             username:'username',
             password:'password',
@@ -285,6 +310,8 @@ const User = {
             email:'email',
             id:'id'
         }
+      @apiExample Example usage:
+        curl -H "Content-Type: application/json" -X POST http://localhost:3000/user/edit
 
       @apiSuccessExample {json} Success-Response:
         HTTP/1.1 200 OK
@@ -356,6 +383,21 @@ const User = {
       @apiName modify
       @apiGroup user
 
+      @apiParam {String} username  用户
+      @apiParam {String} password  密码
+      @apiParam {opassword} opassword 原密码
+      @apiParam {rePassword} rePassword   确认密码
+      @apiParam {String} id    用户id
+
+      @apiParamExample {json} Request-Example:
+        {
+            username:'username',
+            password:'password',
+            rePassword:'rePassword',
+            roleId:'roleId',
+            email:'email',
+            id:'id'
+        }
       @apiExample Example usage:
         curl -H "Content-Type: application/json" -X POST http://localhost:3000/user/modify
         {
