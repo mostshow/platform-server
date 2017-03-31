@@ -223,12 +223,12 @@ const project = {
                         var source = fs.readFileSync(local(projectReData.dir)+'/modules/common/api/api.js', {encoding: 'utf8'});
                         fs.writeFileSync(local(projectReData.dir)+'/modules/common/api/api.js', source.replace("require('mock_api/mock_api')",false));
                     } catch (e) {
-                        return tools.sendResult(res,1015)
+                        // return tools.sendResult(res,1015)
                     }
 
                     try {
                         let data = fs.readFileSync(local(projectReData.dir)+'/fis-conf.js', {encoding: 'utf8'})
-                        fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',data.replace('$domain$',domain))
+                        fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',data.replace(/\$domain\$/g,domain))
                     } catch (e) {
                         return tools.sendResult(res,1016)
                     }
