@@ -15,6 +15,7 @@ const path = require('path');
 const baseController = require('./base_controller')
 const exec = require('child_process').exec;
 const local = path.join.bind(path,config.projectDir);
+const refTime = 10*60*1000// 测试10分钟；3*24*60*60*1000
 
 const project = {
     create : function(req, res, next){
@@ -142,7 +143,7 @@ const project = {
             if(_.isEmpty(reData)){
                 return tools.sendResult(res,1000);
             }
-            tools.sendResult(res,0,reData)
+            return tools.sendResult(res,0,reData)
         }).catch(err => {
             //return next(err);
             return tools.sendResult(res,600);
@@ -166,12 +167,14 @@ const project = {
             totalRecord:ProjectModel.count(params)
         }).then(reData => {
             if(_.isEmpty(reData)){
-                return tools.sendResult(res,1000);
+                tools.sendResult(res,1000);
+                return  null;
             }
 
             tools.sendResult(res,0,reData);
+            return  null;
         }).catch(err =>{
-            return next(err)
+            next(err)
             return tools.sendResult(res,600);
         })
     },
@@ -266,32 +269,49 @@ const project = {
                                     return tools.sendResult(res,500)
                                 }
                                 let deleteBakStr = ''
+                                let deleteDiff = ''
+                                let nowTime = new Date().getTime();
+                                let deleteFlag = false;
                                 onlineLog += data;
                                 let version = getVersion();
                                 let backData = projectReData.backupInfo || {}
+
                                 let backup = (backData[publish_id]&&projectReData.backupInfo[publish_id].backup)||[];
-                                let deleteBak = (backData[publish_id]&&projectReData.backupInfo[publish_id].deleteBak)||[];
-                                if(!_.isEmpty(deleteBak)){
-                                    deleteBak =  deleteBak.map(function(item){
-                                        return item+'.zip'
-                                    })
-                                    deleteBakStr = '&&rm -rf ' + deleteBak.join(' ')
+                                let deleteBak = (backData[publish_id]&&projectReData.backupInfo[publish_id].deleteBak)||[nowTime];
+
+                                let lastTime = deleteBak.pop();
+
+                                let relativeTime = nowTime-lastTime
+
+                                if(relativeTime > refTime){
+                                    deleteDiff = '&&drf '+release+' --del-diff'
+                                    if(!_.isEmpty(deleteBak)){
+                                        deleteBak =  deleteBak.map(function(item){
+                                            return 'backup/'+item+'.zip'
+                                        })
+                                        deleteBakStr = '&&rm -rf ' + deleteBak.join(' ')
+                                        deleteFlag = true;
+                                    }
                                 }
                                 Client.Shell({
                                     connConfig:connConfig,
-                                    cmd:'cd '+reData.dir+deleteBakStr+' && drf '+release+' ' +release+'-pack.zip  --bak-name='+version+  "\r\nexit\r\n"
+                                    cmd:'cd '+reData.dir+deleteDiff+deleteBakStr+' && drf '+release+' ' +release+'-pack.zip  --bak-name='+version+  "\r\nexit\r\n"
                                 },function(err,data){
                                     if(err) return tools.sendResult(res,501);
                                     onlineLog += data;
                                     console.log('http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html')
+
                                     projectReData.publish = remove(projectReData.publish,publish_id)
                                     projectReData.publish.push(publish_id)
 
                                     backup.unshift(release+'-bak-'+version);
-                                    let deleteBak = backup.splice(5);
+                                    let deleteBakNew = backup.splice(10);
+                                    deleteBakNew.push(nowTime)
+                                    console.log(deleteBakNew)
+
                                     let backupInfo = {
                                         backup:backup,
-                                        deleteBak:deleteBak,
+                                        deleteBak:deleteFlag?deleteBakNew:deleteBak.concat(deleteBakNew),
                                         revertVersion:''
                                     }
 
@@ -377,17 +397,17 @@ const project = {
                     // console.log(data)
                     console.log('http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html')
                     projectReData.publish = remove(projectReData.publish,publish_id)
-                    let backData = projectReData.backupInfo || {}
-                    let backup = (backData[publish_id]&&projectReData.backupInfo[publish_id].backup)||[];
-                    let deleteBak = backup.splice(5);
-                    let backupInfo = {
-                        backup:backup,
-                        deleteBak:deleteBak,
-                        revertVersion:''
-                    }
-                    backData[publish_id] = backupInfo;
+                    // let backData = projectReData.backupInfo || {}
+                    // let backup = (backData[publish_id]&&projectReData.backupInfo[publish_id].backup)||[];
+                    // let deleteBak = backup.splice(5);
+                    // let backupInfo = {
+                    //     backup:backup,
+                    //     deleteBak:deleteBak,
+                    //     revertVersion:''
+                    // }
+                    // backData[publish_id] = backupInfo;
                     let modify = _.extend(projectReData, {});
-                    modify.markModified('backupInfo')
+                    // modify.markModified('backupInfo')
 
                     modify.save((err, projectReData) => {
                         if (err) {

@@ -70,9 +70,11 @@ const projectCategory = {
             .populate('updateBy','username'),
         }).then(reData => {
             if(!reData){
-                return tools.sendResult(res,1000);
+                tools.sendResult(res,1000);
+                return  null;
             }
-            return tools.sendResult(res,0,reData);
+            tools.sendResult(res,0,reData);
+            return  null;
         }).catch(err =>{
             return tools.sendResult(res,600);
         })

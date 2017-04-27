@@ -77,10 +77,10 @@ const CertMiddleWare = {
                 if(~tempArr.indexOf(String(roleId))){
                     next()
                 }else{
-                    res.send(WebStatus.init(403).toJSON());
+                    return res.send(WebStatus.init(403).toJSON());
                 }
             }).catch(err =>{
-                res.send(WebStatus.init(500).toJSON());
+                return res.send(WebStatus.init(500).toJSON());
             })
         // }else{
         //     next()
@@ -91,7 +91,7 @@ const CertMiddleWare = {
      *
      */
     setHeader: function(req, res, next){
-        //res.setHeader("Content-Type","text/html;charset=utf-8");
+        // res.setHeader("Content-Type","text/html;charset=utf-8");
         res.setHeader('Access-Control-Allow-Origin', '*');
         // res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3011');
         res.setHeader('Access-Control-Allow-Credentials', true);
@@ -128,7 +128,7 @@ const CertMiddleWare = {
             user = req.session.user = new UserModel(user);
             RoleModel.findOne({_id:user.roleId}).then(reData =>{
                 req.session.userRoleId = reData.roleId;
-                next();
+                return  next();
             }).catch(err=>{
                 console.log(err)
                 res.send(WebStatus.init(-8).toJSON());
