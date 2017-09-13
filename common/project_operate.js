@@ -99,17 +99,29 @@ module.exports  = {
     fetch(params,callback){
         var self = this,repo;
         // this.mkdir(local(params.dir),function(){
-        if(!fs.lstatSync(local(params.dir))){
-            callback(new Error("dir not exist"));
+        if(!fs.existsSync(local(params.dir))){
+            self.clone({gitPath:params.gitPath,dir:params.dir},function(error){
+                    if (error) {
+                        callback(error)
+                        return ;
+                    }
+                    update();
+                }
+            )
+            //callback(new Error("dir not exist"));
+        }else{
+            update();
         }
 
-        exec('cd  '+ local(params.dir) +'&&git fetch && git checkout '+params.branch+' &&git pull',(error, stdout, stderr) => {
-            if (error) {
-                callback(error)
-                return ;
-            }
-            callback()
-        })
+        function update(){
+            exec('cd  '+ local(params.dir) +'&&git fetch && git checkout '+params.branch+' &&git pull',(error, stdout, stderr) => {
+                if (error) {
+                    callback(error)
+                    return ;
+                }
+                callback()
+            })
+        }
             // Open(local(params.dir)).then(function(repository) {
             //     repo = repository;
             //     return repo.fetch("origin", {

@@ -45,7 +45,7 @@ const project = {
             if(!_.isEmpty(reData)){
                 console.log('fetch')
 
-                ProjectOp.fetch({dir:params.dir,branch:params.branch},function(err){
+                ProjectOp.fetch(params,function(err){
                     if(err){
                         console.log(err)
                         return tools.sendResult(res,500);
@@ -54,7 +54,7 @@ const project = {
                 })
             }else{
                 console.log('clone')
-                ProjectOp.clone({gitPath:params.gitPath,dir:params.dir},function(err){
+                ProjectOp.clone(params,function(err){
                     if(err){
                         console.log(err)
                         return tools.sendResult(res,500);
