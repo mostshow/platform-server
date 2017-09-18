@@ -1,6 +1,6 @@
-
-
-db.users.save({ username: 'root', password: '$2a$10$PiKIeoP6XWUM7J6LpeSPv.uqVcl8ZVw6MXQvrryC46VlQ9/9CnG/2', email: 'root@qguanzi.com', roleId: ObjectId("58ac2426a46c7dc66058e906"),createAt: new Date(), updateAt: new Date() })
+username:root
+password:111111
+db.users.save({ username: 'root', password: '$2a$10$PiKIeoP6XWUM7J6LpeSPv.uqVcl8ZVw6MXQvrryC46VlQ9/9CnG/2', email: 'root@qguanzi.com', roleId: ObjectId("58ac2426a46c7dc66058e906"),createAt: new Date(), updateAt: new Date() });
 db.roles.save( { rolename: "管理员", roleId : 0,updateAt:new Date(),createAt:new Date()} )
 db.projectcategories.save( { name: "活动项目",updateAt:new Date(),createAt:new Date()} )
 db.projectcategories.save( { name: "常规项目",updateAt:new Date(),createAt:new Date()} )
