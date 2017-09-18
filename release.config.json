@@ -1,0 +1,15 @@
+{
+	"apps" : [{
+		"name"        : "deploy",
+		"script"      : "app.js",
+        "node_args":"--harmony",
+		"log_date_format"  : "YYYY-MM-DD HH:mm:SS",
+		"watch"      :  false,
+        "exec_interpreter": "babel-node",
+		"ignore_watch" : ["node_modules", "client"],
+		"env": {
+			"NODE_ENV": "development"
+		}
+	}]
+}
+
