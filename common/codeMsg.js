@@ -39,6 +39,8 @@ module.exports = {
 		1013: "只支持zip",
 		1014: "您不是管理员,无法删除项目",
 		1015: "/modules/common/api/api.js 读取失败",
-		1016: "fis-conf.js 读取失败"
+		1016: "fis-conf.js 读取失败",
+		1017: "uglify 失败",
+		1018: "分支初始化失败"
 	}
 };
