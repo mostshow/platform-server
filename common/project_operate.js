@@ -114,7 +114,7 @@ module.exports  = {
         }
 
         function update(){
-            exec('cd  '+ local(params.dir) +'&&git checkout . && git fetch && git checkout '+params.branch+' &&git pull',(error, stdout, stderr) => {
+            exec('cd  '+ local(params.dir) +'&&git checkout . &&  git fetch && git checkout '+params.branch+' &&git pull',(error, stdout, stderr) => {
                 if (error) {
                     callback(error)
                     return ;
