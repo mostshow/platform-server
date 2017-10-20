@@ -16,6 +16,7 @@ const baseController = require('./base_controller')
 const exec = require('child_process').exec;
 const local = path.join.bind(path,config.projectDir);
 const refTime = 10*60*1000// 测试10分钟；3*24*60*60*1000
+const execSync = require('child_process').execSync;
 
 const project = {
     create : function(req, res, next){
@@ -178,6 +179,297 @@ const project = {
             return tools.sendResult(res,600);
         })
     },
+    local_online : function(req,res){
+
+        let  onlineLog = ''
+        let  project_id = tools.getParam(req,'project_id')//project
+        let  publish_id = tools.getParam(req,'publish_id');//publish
+        if (tools.notEmpty([project_id,publish_id])) {
+            return tools.sendResult(res,-1);
+        }
+        ProjectModel.getById(project_id).then( projectReData => {
+            if(_.isEmpty(projectReData)){
+                return tools.sendResult(res,1000);
+            }
+
+            PublishModel.getById(publish_id).then((reData)=>{
+                if(_.isEmpty(reData)){
+                    return tools.sendResult(res,1000);
+                }
+                console.log('switch')
+
+                ProjectOp.switch({dir:projectReData.dir,branch:projectReData.branch},function(err){
+                    if(err){
+                        console.log(err)
+                        return tools.sendResult(res,500);
+                    }
+                    let release =projectReData.accessDir;
+                    let domain = reData.generate?release:''
+                    try {
+                        var source = fs.readFileSync(local(projectReData.dir)+'/modules/common/api/api.js', {encoding: 'utf8'});
+                        fs.writeFileSync(local(projectReData.dir)+'/modules/common/api/api.js', source.replace("require('mock_api/mock_api')",false));
+                    } catch (e) {
+                        // return tools.sendResult(res,1015)
+                    }
+
+                    try {
+                        let data = fs.readFileSync(local(projectReData.dir)+'/fis-conf.js', {encoding: 'utf8'})
+                        fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',
+                            data.replace(/\$domain\$/g,domain).replace(/\$r_master_url\$/g,'prod').replace(/\$r_path_dir\$/g,local(release))
+                        )
+                    } catch (e) {
+                        return tools.sendResult(res,1016)
+                    }
+
+                    exec('cd '+local(projectReData.dir)+'&&rm -rf ../'+release+'&& fis3 release prod &&git checkout . ', (error, stdout, stderr) => {
+                        if (error) {
+                            console.error(`exec error: ${error}`);
+                            return tools.sendResult(res,500);
+                        }
+                        onlineLog += stdout;
+                        exec('cd '+local()+' && drf '+ release +' --pack',(error, stdout, stderr) => {
+                            if (error) {
+                                console.error(`exec error: ${error}`);
+                                return tools.sendResult(res,500);
+                            }
+                            console.log(`stdout: ${stdout}`);
+                            onlineLog += stdout;
+                            exec('cp -rf '+ local(release+'-pack.zip') +' '+ path.resolve(reData.dir,release+'-pack.zip'),(err, data, stderr) => {
+
+                                if(err){
+                                    console.log(err)
+                                    return tools.sendResult(res,500)
+                                }
+                                let deleteBakStr = ''
+                                let deleteDiff = ''
+                                let nowTime = new Date().getTime();
+                                let deleteFlag = false;
+                                onlineLog += data;
+                                let version = getVersion();
+                                let backData = projectReData.backupInfo || {}
+
+                                let backup = (backData[publish_id]&&projectReData.backupInfo[publish_id].backup)||[];
+                                let deleteBak = (backData[publish_id]&&projectReData.backupInfo[publish_id].deleteBak)||[nowTime];
+
+                                let lastTime = deleteBak.pop();
+
+                                let relativeTime = nowTime-lastTime
+
+                                if(relativeTime > refTime){
+                                    deleteDiff = '&&drf '+release+' --del-diff'
+                                    if(!_.isEmpty(deleteBak)){
+                                        deleteBak =  deleteBak.map(function(item){
+                                            return 'backup/'+item+'.zip'
+                                        })
+                                        deleteBakStr = '&&rm -rf ' + deleteBak.join(' ')
+                                        deleteFlag = true;
+                                    }
+                                }
+                                exec('cd '+reData.dir+deleteDiff+deleteBakStr+' && drf '+release+' ' +release+'-pack.zip  --bak-name='+version, (err,data) => {
+
+                                    if(err) return tools.sendResult(res,501);
+                                    onlineLog += data;
+                                    console.log('http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html')
+
+                                    projectReData.publish = remove(projectReData.publish,publish_id)
+                                    projectReData.publish.push(publish_id)
+
+                                    backup.unshift(release+'-bak-'+version);
+                                    let deleteBakNew = backup.splice(10);
+                                    deleteBakNew.push(nowTime)
+                                    console.log(deleteBakNew)
+
+                                    let backupInfo = {
+                                        backup:backup,
+                                        deleteBak:deleteFlag?deleteBakNew:deleteBak.concat(deleteBakNew),
+                                        revertVersion:''
+                                    }
+
+                                    backData[publish_id] = backupInfo;
+                                    let modify = _.extend(projectReData,{backupInfo:backData});
+                                    modify.markModified('backupInfo')
+                                    modify.save((err, projectReData) => {
+                                        if (err) {
+                                            return tools.sendResult(res,500)
+                                        }
+                                        let obj = {
+                                            username:req.session.user.username,
+                                            action:'上线',
+                                            project:modify.name,
+                                            server:reData.publishName,
+                                            address:'http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html',
+                                            // onlineLog:onlineLog
+                                        }
+                                        try{
+                                            tools.sendProjectMail(obj)
+                                            tools.logger(obj)
+                                        }catch(e){
+                                            console.log(e)
+                                        }
+
+                                        return tools.sendResult(res,0,projectReData)
+
+                                    })
+                                })
+                            })
+                        })
+                    });
+                })
+            }).catch(err => {
+                console.log(err);
+                return tools.sendResult(res,600);
+            });
+            // tools.sendResult(res,0)
+        }).catch(err => {
+            //return next(err);
+            return tools.sendResult(res,600);
+        });
+
+    },    
+    local_offline : function(req,res){
+
+        let  project_id = tools.getParam(req,'project_id')//project
+        let  publish_id = tools.getParam(req,'publish_id');//publish
+        if (tools.notEmpty([project_id,publish_id])) {
+            return tools.sendResult(res,-1);
+        }
+        ProjectModel.getById(project_id).then( projectReData => {
+            if(_.isEmpty(projectReData)){
+                return tools.sendResult(res,1000);
+            }
+            //test
+            // projectReData.publish = remove(projectReData.publish,publish_id)
+            // console.log(projectReData.publish.indexOf(publish_id))
+            // let modify = _.extend(projectReData, {});
+            // modify.save((err, projectReData) => {
+            //     if (err) {
+            //         return tools.sendResult(res,500)
+            //     }
+            //     tools.sendResult(res,0)
+            // })
+            // return;
+            //test
+            let release =projectReData.accessDir;
+
+            PublishModel.getById(publish_id).then((reData)=>{
+                if(_.isEmpty(reData)){
+                    return tools.sendResult(res,1000);
+                }
+
+                exec('cd '+reData.dir+' && rm -rf '+release, (err,data) => {
+                    if(err) return tools.sendResult(res,501);
+                    // console.log(data)
+                    console.log('http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html')
+                    projectReData.publish = remove(projectReData.publish,publish_id)
+                    // let backData = projectReData.backupInfo || {}
+                    // let backup = (backData[publish_id]&&projectReData.backupInfo[publish_id].backup)||[];
+                    // let deleteBak = backup.splice(5);
+                    // let backupInfo = {
+                    //     backup:backup,
+                    //     deleteBak:deleteBak,
+                    //     revertVersion:''
+                    // }
+                    // backData[publish_id] = backupInfo;
+                    let modify = _.extend(projectReData, {});
+                    // modify.markModified('backupInfo')
+
+                    modify.save((err, projectReData) => {
+                        if (err) {
+                            return tools.sendResult(res,500)
+                        }
+
+                        let obj = {
+                            username:req.session.user.username,
+                            action:'下线',
+                            project:modify.name,
+                            server:reData.publishName,
+                            address:'http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html'
+                        }
+                        try{
+                            tools.sendProjectMail(obj)
+                            tools.logger(obj)
+                        }catch(e){
+                            console.log(e)
+                        }
+                        return tools.sendResult(res,0,projectReData)
+                    })
+                })
+            }).catch(err => {
+                console.log(err);
+                return tools.sendResult(res,600);
+            });
+        }).catch(err => {
+            console.log(err);
+            //return next(err);
+            return tools.sendResult(res,600);
+        });
+    },
+
+    local_revert:function(req,res){
+        let  revertVersion = tools.getParam(req,'revertVersion')
+        let  project_id = tools.getParam(req,'project_id')//project
+        let  publish_id = tools.getParam(req,'publish_id');//publish
+        if (tools.notEmpty([revertVersion, project_id, publish_id])) {
+            return tools.sendResult(res,-1);
+        }
+        ProjectModel.getById(project_id).then( projectReData => {
+            if(_.isEmpty(projectReData)){
+                return tools.sendResult(res,1000);
+            }
+            let release =projectReData.accessDir;
+            PublishModel.getById(publish_id).then((reData)=>{
+                if(_.isEmpty(reData)){
+                    return tools.sendResult(res,1000);
+                }
+
+                let revertVersionZip = revertVersion + '.zip'
+
+                exec( 'cd '+reData.dir+' && cp ./backup/'+revertVersionZip+' '+revertVersionZip+'&&drf '+release+' ' +revertVersionZip+'  --unpack', (err,data) => {
+                    if(err) return tools.sendResult(res,501);
+
+                    console.log(data)
+                    console.log('http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html')
+
+                    projectReData.publish = remove(projectReData.publish,publish_id)
+                    projectReData.publish.push(publish_id)
+                    projectReData.backupInfo[publish_id].revertVersion = revertVersion;
+
+                    let modify = _.extend(projectReData, {});
+                    modify.markModified('backupInfo')
+                    modify.save((err, projectReData) => {
+                        if (err) {
+                            return tools.sendResult(res,500)
+                        }
+                        let obj = {
+                            username:req.session.user.username,
+                            action:'回滚',
+                            project:modify.name,
+                            version:revertVersion,
+                            server:reData.publishName,
+                            address:'http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html'
+                        }
+                        try{
+                            tools.sendProjectMail(obj)
+                            tools.logger(obj)
+                        }catch(e){
+                            console.log(e)
+                        }
+                        return tools.sendResult(res,0,projectReData)
+
+                    })
+                })
+            }).catch(err => {
+                console.log(err);
+                return tools.sendResult(res,600);
+            });
+        }).catch(err => {
+            //return next(err);
+            return tools.sendResult(res,600);
+        });
+
+
+    },
+
     online : function(req,res){
         // let _record = {
         //     _id : tools.getParam(req,'id'),
@@ -226,22 +518,33 @@ const project = {
                         var source = fs.readFileSync(local(projectReData.dir)+'/modules/common/api/api.js', {encoding: 'utf8'});
                         fs.writeFileSync(local(projectReData.dir)+'/modules/common/api/api.js', source.replace("require('mock_api/mock_api')",false));
                     } catch (e) {
-                        // return tools.sendResult(res,1015)
+
+                        return tools.sendResult(res,1015)
                     }
 
                     try {
                         let data = fs.readFileSync(local(projectReData.dir)+'/fis-conf.js', {encoding: 'utf8'})
-                        fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',data.replace(/\$domain\$/g,domain))
+
+                        fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',
+                            data.replace(/\$domain\$/g,domain).replace(/\$r_path_dir\$/g,local(release))
+                        )
+
                     } catch (e) {
                         return tools.sendResult(res,1016)
                     }
 
-                    exec('cd '+local(projectReData.dir)+'&&rm -rf ../'+release+'&& fis3 release -d '+local(release) +' &&git checkout . ', (error, stdout, stderr) => {
+                    exec('cd '+local(projectReData.dir)+'&&rm -rf ../'+release+'&& fis3 release test && git checkout . ', (error, stdout, stderr) => {
                         if (error) {
                             console.error(`exec error: ${error}`);
                             return tools.sendResult(res,500);
                         }
                         onlineLog += stdout;
+                        try {
+                            fs.writeFileSync(local(release)+'/fis-conf.js', getFisConf(),false);
+                            execSync('cd '+local(release) +'&& fis3 release uglify && rm fis-conf.js')
+                        } catch (e) {
+                            return tools.sendResult(res,1017)
+                        }
                         exec('cd '+local()+' && drf '+ release +' --pack',(error, stdout, stderr) => {
                             if (error) {
                                 console.error(`exec error: ${error}`);
@@ -330,8 +633,13 @@ const project = {
                                             address:'http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html',
                                             // onlineLog:onlineLog
                                         }
-                                        tools.sendProjectMail(obj)
-                                        tools.logger(obj)
+                                        try{
+                                            tools.sendProjectMail(obj)
+                                            tools.logger(obj)
+                                        }catch(e){
+                                            console.log(e)
+                                        }
+
                                         return tools.sendResult(res,0,projectReData)
 
                                     })
@@ -421,8 +729,12 @@ const project = {
                             server:reData.publishName,
                             address:'http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html'
                         }
-                        tools.logger(obj)
-                        tools.sendProjectMail(obj)
+                        try{
+                            tools.sendProjectMail(obj)
+                            tools.logger(obj)
+                        }catch(e){
+                            console.log(e)
+                        }
                         return tools.sendResult(res,0,projectReData)
                     })
                 })
@@ -489,8 +801,12 @@ const project = {
                             server:reData.publishName,
                             address:'http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html'
                         }
-                        tools.logger(obj)
-                        tools.sendProjectMail(obj)
+                        try{
+                            tools.sendProjectMail(obj)
+                            tools.logger(obj)
+                        }catch(e){
+                            console.log(e)
+                        }
                         return tools.sendResult(res,0,projectReData)
 
                     })
@@ -506,6 +822,19 @@ const project = {
 
 
     }
+}
+function getFisConf(){
+    return "fis.media('uglify')\
+        .match('*.js', {\
+            optimizer: fis.plugin('uglify-js', {\
+                sourceMap:true\
+            })\
+        })\
+        .match('*', {\
+            deploy: fis.plugin('local-deliver', {\
+                to: './'\
+        })\
+    });"
 }
 function getVersion(){
     const curTime = moment();
