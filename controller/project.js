@@ -209,13 +209,13 @@ const project = {
                         var source = fs.readFileSync(local(projectReData.dir)+'/modules/common/api/api.js', {encoding: 'utf8'});
                         fs.writeFileSync(local(projectReData.dir)+'/modules/common/api/api.js', source.replace("require('mock_api/mock_api')",false));
                     } catch (e) {
-                        // return tools.sendResult(res,1015)
+                        return tools.sendResult(res,1015)
                     }
 
                     try {
                         let data = fs.readFileSync(local(projectReData.dir)+'/fis-conf.js', {encoding: 'utf8'})
                         fs.writeFileSync(local(projectReData.dir)+'/fis-conf.js',
-                            data.replace(/\$domain\$/g,domain).replace(/\$r_master_url\$/g,'prod').replace(/\$r_path_dir\$/g,local(release))
+                            data.replace(/\$domain\$/g,domain).replace(/\$r_path_dir\$/g,local(release))
                         )
                     } catch (e) {
                         return tools.sendResult(res,1016)
@@ -227,6 +227,12 @@ const project = {
                             return tools.sendResult(res,500);
                         }
                         onlineLog += stdout;
+                        try {
+                            fs.writeFileSync(local(release)+'/fis-conf.js', getFisConf(),false);
+                            execSync('cd '+local(release) +'&& fis3 release uglify && rm fis-conf.js')
+                        } catch (e) {
+                            return tools.sendResult(res,1017)
+                        }
                         exec('cd '+local()+' && drf '+ release +' --pack',(error, stdout, stderr) => {
                             if (error) {
                                 console.error(`exec error: ${error}`);
@@ -325,7 +331,7 @@ const project = {
             return tools.sendResult(res,600);
         });
 
-    },    
+    },
     local_offline : function(req,res){
 
         let  project_id = tools.getParam(req,'project_id')//project
@@ -539,12 +545,12 @@ const project = {
                             return tools.sendResult(res,500);
                         }
                         onlineLog += stdout;
-                        try {
-                            fs.writeFileSync(local(release)+'/fis-conf.js', getFisConf(),false);
-                            execSync('cd '+local(release) +'&& fis3 release uglify && rm fis-conf.js')
-                        } catch (e) {
-                            return tools.sendResult(res,1017)
-                        }
+                        // try {
+                        //     fs.writeFileSync(local(release)+'/fis-conf.js', getFisConf(),false);
+                        //     execSync('cd '+local(release) +'&& fis3 release uglify && rm fis-conf.js')
+                        // } catch (e) {
+                        //     return tools.sendResult(res,1017)
+                        // }
                         exec('cd '+local()+' && drf '+ release +' --pack',(error, stdout, stderr) => {
                             if (error) {
                                 console.error(`exec error: ${error}`);
