@@ -180,7 +180,6 @@ const project = {
         })
     },
     local_online : function(req,res){
-
         let  onlineLog = ''
         let  project_id = tools.getParam(req,'project_id')//project
         let  publish_id = tools.getParam(req,'publish_id');//publish
@@ -227,12 +226,12 @@ const project = {
                             return tools.sendResult(res,500);
                         }
                         onlineLog += stdout;
-                        try {
-                            fs.writeFileSync(local(release)+'/fis-conf.js', getFisConf(),false);
-                            execSync('cd '+local(release) +'&& fis3 release uglify && rm fis-conf.js')
-                        } catch (e) {
-                            return tools.sendResult(res,1017)
-                        }
+                        // try {
+                        //     fs.writeFileSync(local(release)+'/fis-conf.js', getFisConf(),false);
+                        //     execSync('cd '+local(release) +'&& fis3 release uglify && rm fis-conf.js')
+                        // } catch (e) {
+                        //     return tools.sendResult(res,1017)
+                        // }
                         exec('cd '+local()+' && drf '+ release +' --pack',(error, stdout, stderr) => {
                             if (error) {
                                 console.error(`exec error: ${error}`);
@@ -481,15 +480,23 @@ const project = {
         //     _id : tools.getParam(req,'id'),
         //     status : tools.getParam(req,'status'),
         // }
+
         let  onlineLog = ''
         let  project_id = tools.getParam(req,'project_id')//project
         let  publish_id = tools.getParam(req,'publish_id');//publish
+
+        if(isLocker()){
+            return tools.sendResult(res, 1019)
+        }else{
+            locker()
+        }
+
         if (tools.notEmpty([project_id,publish_id])) {
-            return tools.sendResult(res,-1);
+            return tools.sendResultA(res,-1);
         }
         ProjectModel.getById(project_id).then( projectReData => {
             if(_.isEmpty(projectReData)){
-                return tools.sendResult(res,1000);
+                return tools.sendResultA(res,1000);
             }
 
             //test
@@ -498,9 +505,9 @@ const project = {
             // let modify = _.extend(projectReData, {});
             // modify.save((err, projectReData) => {
             //     if (err) {
-            //         return tools.sendResult(res,500)
+            //         return tools.sendResultA(res,500)
             //     }
-            //     tools.sendResult(res,0)
+            //     tools.sendResultA(res,0)
             // })
             // return;
 
@@ -509,24 +516,24 @@ const project = {
 
             PublishModel.getById(publish_id).then((reData)=>{
                 if(_.isEmpty(reData)){
-                    return tools.sendResult(res,1000);
+                    return tools.sendResultA(res,1000);
                 }
                 console.log('switch')
 
                 ProjectOp.switch({dir:projectReData.dir,branch:projectReData.branch},function(err){
                     if(err){
                         console.log(err)
-                        return tools.sendResult(res,500);
+                        return tools.sendResultA(res,500);
                     }
                     let release =projectReData.accessDir;
                     let domain = reData.generate?release:''
-                    try {
-                        var source = fs.readFileSync(local(projectReData.dir)+'/modules/common/api/api.js', {encoding: 'utf8'});
-                        fs.writeFileSync(local(projectReData.dir)+'/modules/common/api/api.js', source.replace("require('mock_api/mock_api')",false));
-                    } catch (e) {
+                    // try {
+                    //     var source = fs.readFileSync(local(projectReData.dir)+'/modules/common/api/api.js', {encoding: 'utf8'});
+                    //     fs.writeFileSync(local(projectReData.dir)+'/modules/common/api/api.js', source.replace("require('mock_api/mock_api')",false));
+                    // } catch (e) {
 
-                        return tools.sendResult(res,1015)
-                    }
+                    //     return tools.sendResultA(res,1015)
+                    // }
 
                     try {
                         let data = fs.readFileSync(local(projectReData.dir)+'/fis-conf.js', {encoding: 'utf8'})
@@ -536,25 +543,25 @@ const project = {
                         )
 
                     } catch (e) {
-                        return tools.sendResult(res,1016)
+                        return tools.sendResultA(res,1016)
                     }
 
                     exec('cd '+local(projectReData.dir)+'&&rm -rf ../'+release+'&& fis3 release test && git checkout . ', (error, stdout, stderr) => {
                         if (error) {
                             console.error(`exec error: ${error}`);
-                            return tools.sendResult(res,500);
+                            return tools.sendResultA(res,500);
                         }
                         onlineLog += stdout;
-                        // try {
-                        //     fs.writeFileSync(local(release)+'/fis-conf.js', getFisConf(),false);
-                        //     execSync('cd '+local(release) +'&& fis3 release uglify && rm fis-conf.js')
-                        // } catch (e) {
-                        //     return tools.sendResult(res,1017)
-                        // }
+                        try {
+                            fs.writeFileSync(local(release)+'/fis-conf.js', getFisConf(),false);
+                            execSync('cd '+local(release) +'&& fis3 release uglify && rm fis-conf.js')
+                        } catch (e) {
+                            return tools.sendResultA(res,1017)
+                        }
                         exec('cd '+local()+' && drf '+ release +' --pack',(error, stdout, stderr) => {
                             if (error) {
                                 console.error(`exec error: ${error}`);
-                                return tools.sendResult(res,500);
+                                return tools.sendResultA(res,500);
                             }
                             console.log(`stdout: ${stdout}`);
                             onlineLog += stdout;
@@ -575,7 +582,7 @@ const project = {
                             },function(err,data){
                                 if(err){
                                     console.log(err)
-                                    return tools.sendResult(res,500)
+                                    return tools.sendResultA(res,500)
                                 }
                                 let deleteBakStr = ''
                                 let deleteDiff = ''
@@ -606,7 +613,7 @@ const project = {
                                     connConfig:connConfig,
                                     cmd:'cd '+reData.dir+deleteDiff+deleteBakStr+' && drf '+release+' ' +release+'-pack.zip  --bak-name='+version+  "\r\nexit\r\n"
                                 },function(err,data){
-                                    if(err) return tools.sendResult(res,501);
+                                    if(err) return tools.sendResultA(res,501);
                                     onlineLog += data;
                                     console.log('http://'+reData.domain+(reData.generate?'/'+release+'/':'/')+'index.html')
 
@@ -629,7 +636,7 @@ const project = {
                                     modify.markModified('backupInfo')
                                     modify.save((err, projectReData) => {
                                         if (err) {
-                                            return tools.sendResult(res,500)
+                                            return tools.sendResultA(res,500)
                                         }
                                         let obj = {
                                             username:req.session.user.username,
@@ -646,7 +653,7 @@ const project = {
                                             console.log(e)
                                         }
 
-                                        return tools.sendResult(res,0,projectReData)
+                                        return tools.sendResultA(res,0,projectReData)
 
                                     })
                                 })
@@ -656,12 +663,12 @@ const project = {
                 })
             }).catch(err => {
                 console.log(err);
-                return tools.sendResult(res,600);
+                return tools.sendResultA(res,600);
             });
-            // tools.sendResult(res,0)
+            // tools.sendResultA(res,0)
         }).catch(err => {
             //return next(err);
-            return tools.sendResult(res,600);
+            return tools.sendResultA(res,600);
         });
 
     },
@@ -862,6 +869,17 @@ function remove(arr,ele){
         }
     })
     return newArr;
+}
+function isLocker(){
+    return global.currOnline;
+}
+function locker(){
+    global.currOnline = true;
+}
+tools.sendResultA = function(){
+    global.currOnline = false;
+    let arg = Array.prototype.slice.call(arguments);
+    tools.sendResult.apply(null, arg)
 }
 module.exports = project;
 
